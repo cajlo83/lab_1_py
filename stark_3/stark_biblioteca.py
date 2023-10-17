@@ -174,6 +174,8 @@ def obtener_dato_cantidad(lista_diccionarios:list[dict], clave_numerica:str, val
 
     return lista_final
 
+
+
 def stark_imprimir_heroes(lista_personajes:list[dict])->bool:
     '''
     Recibe: una lista de heroes
@@ -344,7 +346,7 @@ def stark_menu_principal()->Union[bool,str]:
 
 
 
-def stark_marvel_app(lista_personajes:list[dict]):
+def stark_marvel_app_3(lista_personajes:list[dict]):
     '''
     Recibe: la lista de personajes
     muestra el menu, valida la opcion seleccionada y hace la llamada de funcion correspondiente
@@ -600,7 +602,10 @@ def stark_marvel_app(lista_personajes:list[dict]):
                     for color in lista_color_ojos: #recorro la lista de colores
                         print(f'\ncolor {color}:')
                         for personaje in lista_personajes: #recorro la lista de personajes 
-                            if personaje["color_ojos"] == color or (personaje["color_ojos"] == "" and color == "no data"): #si hay coincidencia, se imprime el nombre
+                            # se extrae el valor de personaje["color_ojos"] para pasar a mayusculas y coincidir con el formato de lista_color_ojos
+                            ojos_personaje = personaje["color_ojos"].upper()
+                            #ojos_personaje = ojos_personaje.upper()
+                            if ojos_personaje == color or (ojos_personaje == "" and color == "NO DATA"): #si hay coincidencia, se imprime el nombre
                                 nombre_j = obtener_nombre(personaje) 
                                 print(nombre_j)
                 else:
@@ -616,6 +621,7 @@ def stark_marvel_app(lista_personajes:list[dict]):
                 #si bandera_a es False entonces aun no se ha ejecutado la opcion A, y no se debe acceder aun a la opcion
                 if bandera_a:
 
+                    print("metodo antiguo*********************************")
                     #hago una copia ordenada de la lista
                     lista_K = lista_diccionarios_sorted(lista_personajes,"inteligencia")
 
@@ -636,8 +642,9 @@ def stark_marvel_app(lista_personajes:list[dict]):
                     
                     for inteligencia in lista_inteligencias: #recorro la lista de inteligencias
                         print(f'\ninteligencia {inteligencia}:')
-                        for personaje in lista_personajes: #recorro la lista de personajes 
-                            if personaje["inteligencia"] == inteligencia or (personaje["inteligencia"] == "" and inteligencia == "no data"): #si hay coincidencia, se imprime el nombre
+                        for personaje in lista_personajes: #recorro la lista de personajes
+                            inteligencia_personaje =  personaje["inteligencia"].upper()
+                            if inteligencia_personaje == inteligencia or (inteligencia_personaje == "" and inteligencia == "NO DATA"): #si hay coincidencia, se imprime el nombre
                                 nombre_k = obtener_nombre(personaje) 
                                 print(nombre_k)
                 else:

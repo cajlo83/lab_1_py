@@ -28,6 +28,20 @@ def verificar_numero_entero(cadena_entrada:str)->bool:
 
 
 
+def diccionario_coincidencia(diccionario:dict,clave:str,valor) -> bool:
+    '''
+    verifica que diccionario[clave] == valor
+    Retorna: True o False
+    '''
+
+    return clave in diccionario and diccionario[clave] == valor
+         
+
+
+
+
+
+
 def lista_diccionarios_buscar_coincidencias(lista_diccionarios:list[dict],clave:str,valor)->list[dict]:
     '''
     Recorre "lista_diccionarios" buscando una "clave" coincidente con "valor".
@@ -37,10 +51,11 @@ def lista_diccionarios_buscar_coincidencias(lista_diccionarios:list[dict],clave:
     lista_final = []
     
     for diccionario in lista_diccionarios:
-        if clave in diccionario and diccionario[clave] == valor:
+        if diccionario_coincidencia(diccionario,clave, valor):
             lista_final.append(diccionario)
     
     return lista_final
+
 
 
 
@@ -74,7 +89,9 @@ def lista_diccionarios_listar_coincidencias(lista_diccionarios:list[dict], clave
     for diccionario in lista_diccionarios: # recorro la lista
         valor_clave = diccionario[clave] # extraigo el valor
         if valor_clave == "": # evaluo data
-            valor_clave = "no data"
+            valor_clave = "NO DATA"
+        else:
+            valor_clave = valor_clave.upper() # se cambia a mayuscula para casos de repeticiones
 
         if valor_clave not in lista_salida: # si el valor aun no esta en la lista, se agrega 
             lista_salida.append(valor_clave)
@@ -95,9 +112,11 @@ def lista_diccionarios_contar_coincidencias(lista_diccionarios:list[dict],clave_
     #bucle para recorrer la lista diccionario por diccionario
     for diccionario in lista_diccionarios:
         if diccionario[clave_lista] != "": # verifica que el valor de la clave en evaluacion no sea un string vacio
-            clave_diccionario = diccionario[clave_lista] # guardo el string no vacio que pasara a ser una clave del diccionario de contadores a crear
+            valor_lista = diccionario[clave_lista] # guardo el string no vacio que pasara a ser una clave del diccionario de contadores a crear
+            clave_diccionario = valor_lista.upper()
+
         else:
-            clave_diccionario ="no data" #como alternativa se configuro como "no data" en caso de recibirse un dato vacio
+            clave_diccionario ="NO DATA" #como alternativa se configuro como "no data" en caso de recibirse un dato vacio
 
         #verifico si el elemento clave_diccionario pertenece a diccionario_final. suma 1 a un contador si existe, inicializa otro contador en 1 si no existe
         if clave_diccionario in diccionario_final:
