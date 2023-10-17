@@ -4,6 +4,7 @@ import re
 
 
 
+
 def extraer_iniciales(nombre_heroe:str) -> str:
     '''
     Recibe: un str que representa un nombre
@@ -566,7 +567,7 @@ def stark_menu_principal():
 
 
 
-def stark_marvel_app_3(lista_heroes:list[dict]):
+def stark_marvel_app_4(lista_heroes:list[dict]):
     '''
     Recibe: la lista de personajes
     ejecuta el codigo constantemente hasta que se envie el comando de salida
@@ -609,8 +610,6 @@ def stark_marvel_app_3(lista_heroes:list[dict]):
 
             case _:
                 print("Opcion incorrecta, reintente")
-
-
 
 
 
