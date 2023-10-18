@@ -126,6 +126,10 @@ def stark_marvel_app_5(lista_heroes:list[dict]):
                     print("error en opcion H")
 
 # I. Informar cual es el Nombre del superhéroe asociado a cada uno de los indicadores anteriores (ítems C a F)
+            case 'I':
+                print("*** opcion I ***")
+                if not stark_mostrar_data_archivo_heroes_calculo_numero_genero():
+                    print("error en opcion I")
 # J. Determinar cuántos superhéroes tienen cada tipo de color de ojos.
             case 'J':
                 print("*** opcion J ***")
@@ -184,6 +188,9 @@ def leer_archivo (nombre_archivo:str) -> list[dict]:
         data = json.load(archivo) # {heroes:lista[]}
         lista = data.get('heroes', []) # heroes[]
         return lista
+
+
+
 
 
 def guardar_archivo (nombre_archivo:str, contenido:str) -> bool:
@@ -732,7 +739,9 @@ def guardar_heroes_por_tipo(diccionario_listas_coincidentes:dict[list[str]], cla
 
 def stark_listar_heroes_por_dato(lista_heroes:list[dict], clave_evaluada:str) -> bool:
     '''
-    
+    organiza e imprime los heroes segun clave_evaluada
+    Recibe: la lista de heroes y la clave_evaluada
+    Retorna: True o False
     '''
     # A.
     set_tipos = obtener_lista_de_tipos(lista_heroes, clave_evaluada)
@@ -743,4 +752,103 @@ def stark_listar_heroes_por_dato(lista_heroes:list[dict], clave_evaluada:str) ->
 
     # C.
     return guardar_heroes_por_tipo(diccionario_listas, clave_evaluada)
+
+
+############################################ parte I ######################################################
+
+
+
+
+
+
+
+
+def leer_archivo_heroes_calculo_numero_genero(nombre_archivo:str) -> str:
+    '''
+    Recibe: el nombre/la direccion de un archivo de tipo heroes_calculo_numero_genero junto a su extension
+    Abre el archivo en modo lectura. Recupera la data del archivo la cual inicialmente sera un string del siguiente formato: "Mayor altura: Nombre: Gamora | Altura: 183.65"
+    Retorna: la cadena formateada
+
+    '''
+    directorio_archivo = armar_directorio_stark_5(nombre_archivo)
+    if os.path.exists(directorio_archivo): # verifica que el archivo exista antes de intentar leerlo
+        with open(directorio_archivo, 'r') as archivo:
+            data = archivo.read()
+            return data # si existe retorna su contenido
+    return f"Error: Aun no se ha creado {nombre_archivo}" # si no existe retorna mensaje de error
+
+
+    
+def interpretar_data_archivo_heroes_calculo_numero_genero(cadena_data:str) -> str:
+    '''
+    Evalua el contenido de cadena_data para verificar si se recibio contenido o un mensaje de error
+    Recibe: una cadena con formato especifico
+    Retorna: la informacion extraida del formato o un mensaje de error
+    '''
+
+    # patrones de regex
+    patron_formato_datos = r"[A-Za-z ]+: Nombre: ([A-Za-z -]+) \| [A-Za-z_]+: [0-9\.]+"
+    
+
+    if re.match(patron_formato_datos, cadena_data): # en caso que se haya abierto el archivo y recibido sus datos
+        matches = re.match(patron_formato_datos, cadena_data)
+        nombre_data = matches.group(1)
+        return f"Nombre: {nombre_data}"    
+    else: # en caso que no
+        return cadena_data
+    
+def error_data_archivo_heroes_calculo_genero(cadena_error):
+    '''
+    Verifica si cadena_error cumple con el patron r"Error: Aun no se ha creado (.+)"
+    Retorna: True o False
+    '''
+    
+    patron_formato_error = r"Error: Aun no se ha creado (.+)"
+    if re.match(patron_formato_error, cadena_error):
+        return True
+    return False
+
+
+def stark_mostrar_data_archivo_heroes_calculo_numero_genero() -> bool:
+    '''
+    Informa cual es el Nombre del superhéroe asociado a cada uno de los indicadores anteriores (ítems C a F)
+    Retorna: False en caso de haber error en alguno de los archivos. True en caso contrario
+    '''
+    retorno = True
+
+    # C: heroes_maximo_altura_M.csv
+    if not imprimir_data_archivo_heroes_calculo_numero_genero("heroes_maximo_altura_M.csv"):
+        retorno = False
+
+    # D: heroes_maximo_altura_F.csv
+    if not imprimir_data_archivo_heroes_calculo_numero_genero("heroes_maximo_altura_F.csv"):
+        retorno = False
+
+    # E: heroes_minimo_altura_M.csv
+    if not imprimir_data_archivo_heroes_calculo_numero_genero("heroes_minimo_altura_M.csv"):
+        retorno = False
+
+    # E: heroes_minimo_altura_F.csv
+    if not imprimir_data_archivo_heroes_calculo_numero_genero("heroes_minimo_altura_F.csv"):
+        retorno = False
+
+    return retorno
+
+def imprimir_data_archivo_heroes_calculo_numero_genero(nombre_archivo) -> bool:
+    '''
+    imprime el contenido del archivo o un mensaje de error
+    Recibe: el nombre del archivo con sus datos
+    Retorna: True o False    
+    '''
+    datos = leer_archivo_heroes_calculo_numero_genero(nombre_archivo) # extraigo contenido del archivo
+    if error_data_archivo_heroes_calculo_genero(datos): # si hay un error se imprime, y se retorna False
+        imprimir_dato(datos) 
+        return False
+    else: # si no hay error se informa lo correspondiente, y se retorna True
+        datos_salida = f"En {nombre_archivo} se encontro la siguiente info: {interpretar_data_archivo_heroes_calculo_numero_genero(datos)}"
+        imprimir_dato(datos_salida)
+        return True
+
+
+
 
