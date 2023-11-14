@@ -6,7 +6,20 @@ import sub_biblioteca
 from colores import *
 from objetos_tetris import *
 
-def crear_grilla(espacio_jugable:pygame.surface.Surface, dimension_grilla:int) -> list[tuple]:
+
+
+def crear_ventana(ancho:int, alto:int, texto_titulo:str) -> pygame.surface.Surface:
+    '''
+    Recibe: el alto, el ancho y el texto del titulo de la ventana
+    Operacion: crea la ventana del programa con el tamaño y el titulo especificados
+    Retorna: el objeto surface que representra a la ventana
+    '''
+    ventana = pygame.display.set_mode((ancho, alto))
+    pygame.display.set_caption(texto_titulo)
+    return ventana
+
+
+def crear_grilla(espacio_jugable:pygame.rect.Rect, dimension_grilla:int) -> list[tuple]:
     '''
     Recibe: el espacio jugable y la dimension de las grillas
     Operacion: recorre las dimensiones del espacio jugable saltando posiciones segun el tamaño de la grilla para guardar coordenadas que se usaran para armar una grilla 

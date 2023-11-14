@@ -1,8 +1,13 @@
+'''
+tetris en pygame
+autor: Carlo Morici
+'''
+
 import pygame
 import sys
 import time
-import espacio_para_jugar
-import background
+#import entorno
+import entorno
 from objetos_tetris import *
 from colores import *
 
@@ -12,7 +17,7 @@ pygame.init()
 
 # datos de la partida
 modalidad_juego = "CLA"
-dificultad = 1
+dificultad = 6
 
 # limitar FPS para disminuir carga de CPU (1/2)
 limite_fps = 30
@@ -21,7 +26,7 @@ limite_fps = 30
 reloj = pygame.time.Clock()
 
 # Configuración de la ventana del programa
-screen = background.crear_ventana(800, 600, "tetris pygame Carlo Morici")
+screen = entorno.crear_ventana(800, 600, "tetris pygame Carlo Morici")
 
 # Establecer parametros de tamaño y movimiento
 ancho_espacio_jugable = 250
@@ -32,13 +37,13 @@ tiempo_entre_movimientos = 0.5 / limite_movimientos_por_segundo
 
 # espacio jugable, su posicion, su tamaño y la grilla
 espacio_jugable = pygame.Rect(50, 30, ancho_espacio_jugable, alto_espacio_jugable)
-lista_grilla = espacio_para_jugar.crear_grilla(espacio_jugable, dim_bloques)
-matriz_esquinas = espacio_para_jugar.crear_puntos_grilla(espacio_jugable, dim_bloques)
+lista_grilla = entorno.crear_grilla(espacio_jugable, dim_bloques)
+matriz_esquinas = entorno.crear_puntos_grilla(espacio_jugable, dim_bloques)
 
 
 
 # datos iniciales del jugador
-x_jugador = (espacio_jugable.left + espacio_jugable.right) / 2 - dim_bloques
+x_jugador = int((espacio_jugable.left + espacio_jugable.right) / 2 - dim_bloques)
 y_jugador = espacio_jugable.top
 figura_jugador = crear_figura(color_morado,dim_bloques,x_jugador, y_jugador)
 
@@ -87,17 +92,17 @@ while running:
         if keys[pygame.K_RIGHT]: # derecha 
             figura_jugador.trasladar("derecha", dim_bloques, tope_derecha)
             tiempo_anterior = tiempo_actual
-    
+
         if keys[pygame.K_DOWN]: # abajo
             tocar_tope = figura_jugador.bajar(dim_bloques, tope_inferior)
             tiempo_anterior = tiempo_actual
-            
-              
-                
+
+
+
 
     # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
     tocar_tope = figura_jugador.bajar(dificultad, tope_inferior)
-    
+
     # verifica un toque te tope
     if tocar_tope: #asignar puntos 
         # crear nueva figura para el jugador
@@ -113,14 +118,14 @@ while running:
     # espacio jugable
     pygame.draw.rect(screen, color_rojo, espacio_jugable) # rectangulo
 
-    
+
     # se representa graficamente al jugador en pantalla
     figura_jugador.mostrar(screen) 
 
     # elementos esteticos
-    if not espacio_para_jugar.mostrar_grilla(lista_grilla,screen): # grilla
+    if not entorno.mostrar_grilla(lista_grilla,screen): # grilla
         print("error mostrando grilla")
-    if not espacio_para_jugar.mostrar_puntos(matriz_esquinas, screen, 3): # esquinas
+    if not entorno.mostrar_puntos(matriz_esquinas, screen, 3): # esquinas
         print("error mostrando puntos")
 
     # textos
