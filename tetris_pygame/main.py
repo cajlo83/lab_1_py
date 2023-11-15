@@ -45,11 +45,12 @@ matriz_esquinas = entorno.crear_puntos_grilla(espacio_jugable, dim_bloques)
 # datos iniciales del jugador
 x_jugador = int((espacio_jugable.left + espacio_jugable.right) / 2 - dim_bloques)
 y_jugador = espacio_jugable.top
-figura_jugador = crear_figura(color_morado,dim_bloques,x_jugador, y_jugador)
+figura_jugador = crear_figura(dim_bloques,x_jugador, y_jugador)
 
 
 # inicializacion pared de bloques
 pared_bloques = crear_pared(modalidad_juego, espacio_jugable, dim_bloques)
+print ( "se creo pared_bloques")
 
 
 
@@ -79,7 +80,7 @@ while running:
     tiempo_transcurrido = tiempo_actual - tiempo_anterior
 
     # se detecta el/los topes
-    tope_inferior = pared_bloques.calcular_tope(espacio_jugable, dim_bloques)
+   # tope_inferior = pared_bloques.calcular_tope(espacio_jugable, dim_bloques)
 
 
     # Obtener las teclas presionadas para moverse sin salir del espacio jugable, solo si se cumplio el tiempo establecido entre pulsaciones
@@ -94,33 +95,39 @@ while running:
             tiempo_anterior = tiempo_actual
 
         if keys[pygame.K_DOWN]: # abajo
-            tocar_tope = figura_jugador.bajar(dim_bloques, tope_inferior)
+            tocar_tope = figura_jugador.bajar(dim_bloques, pared_bloques)
             tiempo_anterior = tiempo_actual
 
 
 
 
     # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
-    tocar_tope = figura_jugador.bajar(dificultad, tope_inferior)
+    tocar_tope = figura_jugador.bajar(dificultad, pared_bloques)
 
     # verifica un toque te tope
-    if tocar_tope: #asignar puntos 
+    if tocar_tope: 
+        # integrar bloques a la pared
+        pared_bloques.agregar_bloques_desde_figura(figura_jugador)
+        # asignar puntos 
         # crear nueva figura para el jugador
-        figura_jugador = crear_figura(color_morado,dim_bloques,x_jugador, y_jugador)
+        figura_jugador = crear_figura(dim_bloques,x_jugador, y_jugador)
 
 
 
 
 
     ########### Dibujar la pantalla ###########
-    screen.fill(color_blanco) # fondo
+    screen.fill(color_fondo_ventana) # fondo
 
     # espacio jugable
-    pygame.draw.rect(screen, color_rojo, espacio_jugable) # rectangulo
+    pygame.draw.rect(screen, color_gris_oscuro, espacio_jugable) # rectangulo
 
 
     # se representa graficamente al jugador en pantalla
     figura_jugador.mostrar(screen) 
+
+    # se muestran los bloques de la pared
+    pared_bloques.mostrar(screen)
 
     # elementos esteticos
     if not entorno.mostrar_grilla(lista_grilla,screen): # grilla

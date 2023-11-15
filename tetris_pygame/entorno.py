@@ -60,7 +60,7 @@ def mostrar_grilla (lista_lineas:list[tuple], screen:pygame.surface.Surface) -> 
 
     if sub_biblioteca.valida_lista(lista_lineas):
         for linea in lista_lineas:
-            pygame.draw.line(screen, color_gris, linea[0], linea[1])
+            pygame.draw.line(screen, color_negro, linea[0], linea[1])
         retorno = True
     else:
         retorno = False
@@ -75,7 +75,7 @@ def mostrar_puntos(matriz_puntos:list[list[tuple]], screen:pygame.surface.Surfac
             retorno = sub_biblioteca.valida_lista(fila) # verifica valor del retorno 2/2
             if retorno:
                 for punto in fila:
-                    pygame.draw.circle(screen, color_gris, punto, radio)
+                    pygame.draw.circle(screen, color_negro, punto, radio)
             else:
                 break
 
