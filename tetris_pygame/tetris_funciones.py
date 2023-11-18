@@ -4,20 +4,52 @@ import time
 import typing
 import sub_biblioteca
 from colores import *
-from objetos_tetris import *
+from tetris_objetos import *
+import time
+
+
+
+class Tiempos:
+    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int):
+        self.reloj = reloj #
+        self.tiempo_actual = tiempo_actual
+        self.tiempo_transcurrido = tiempo_transcurrido
+        self.tiempo_anterior = tiempo_anterior #
+        self.tiempo_entre_movimientos = tiempo_entre_movimientos
+        self.fps = fps #
+
+    def leer_evento(self) -> bool:
+        return self.tiempo_transcurrido >= self.tiempo_entre_movimientos
+    
+    def limitar_fps(self):
+        self.reloj.tick(self.fps)
+
+    def actualiza_tiempo_anterior(self):
+        self.tiempo_anterior = self.tiempo_actual
+
+    def actualiza_tiempo_actual(self):
+        self.tiempo_actual = time.time()
+
+    def actualiza_tiempo_transcurrido(self):
+        self.tiempo_transcurrido = self.tiempo_actual - self.tiempo_anterior
+
+
+
+
+        
+
 
 class Configuracion:
-    def __init__(self,texto_titulo:pygame.surface.Surface, fps:int, dificultad:int, tiempo_entre_movimientos:float, espacio_jugable:pygame.rect.Rect, dimension_bloque:int, puntaje:int, x_jugador:int, y_jugador:int):
+    def __init__(self,texto_titulo:pygame.surface.Surface,tiempo:Tiempos, dificultad:int, espacio_jugable:pygame.rect.Rect, dimension_bloque:int, puntaje:int, x_jugador:int, y_jugador:int):
         self.texto_titulo = texto_titulo #
-        self.fps = fps #
         self.dificultad = dificultad
-        self.tiempo_entre_movimientos = tiempo_entre_movimientos #
         self.espacio_jugable = espacio_jugable # 
         self.dimension_bloque = dimension_bloque
         self.puntaje = puntaje #
         self.x_jugador = x_jugador #
         self.y_jugador = y_jugador #
         self.texto_titulo = texto_titulo #
+        self.tiempo = tiempo #
 
 
     def crear_grilla(self) -> list[tuple]:
@@ -56,11 +88,28 @@ class Configuracion:
 
         return matriz_puntos
 
-    def tiempo_entre_pulsos(self, tiempo_transcurrido) -> bool:
-        return tiempo_transcurrido >= self.tiempo_entre_movimientos
-    
     def mostrar_titulo(self, screen:pygame.surface.Surface):
         screen.blit(self.texto_titulo, (screen.get_width() // 2 - self.texto_titulo.get_width() // 2, 8)) # titulo
+
+    def mostrar_espacio_jugable(self, screen:pygame.surface.Surface):
+        pygame.draw.rect(screen, color_gris_oscuro, self.espacio_jugable)
+
+
+
+def tiempo_crear(limite_movimientos_por_segundo:int) -> Tiempos:
+
+    tiempo_actual = time.time() #
+    tiempo_anterior = time.time()#
+    fps = (limite_movimientos_por_segundo * 4) #
+    tiempo_entre_movimientos = 1 / limite_movimientos_por_segundo #
+    tiempo_transcurrido = tiempo_actual - tiempo_anterior
+    reloj = pygame.time.Clock()#
+
+    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps)
+    
+    return tiempo_retorno
+
+
 
 def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, dificultad:int ) -> Configuracion:
     '''
@@ -73,10 +122,9 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
 
 
     # tiempo entre movimientos
-    tiempo_entre_movimientos = 1 / limite_movimientos_por_segundo #
+#
 
-    # fps
-    fps = limite_movimientos_por_segundo * 5 #
+    
 
     # posicion inicial del jugador
     x_jugador = int((espacio_jugable.left + espacio_jugable.right) / 2 - dimension_bloque) #
@@ -90,7 +138,9 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     # puntaje
     puntaje = 0 #
 
-    retorno = Configuracion(texto_titulo, fps, dificultad, tiempo_entre_movimientos, espacio_jugable, dimension_bloque, puntaje, x_jugador, y_jugador)
+    # tiempos
+    sub_tiempo = tiempo_crear(limite_movimientos_por_segundo)
+    retorno = Configuracion(texto_titulo, sub_tiempo, dificultad, espacio_jugable, dimension_bloque, puntaje, x_jugador, y_jugador)
     return retorno
 
     
@@ -233,3 +283,26 @@ def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     retorno = Pared(tipo_juego, tope_inicial, estructura_pared)
     return retorno
 
+def interaccion_teclado(config:Configuracion, pared_juegos:Pared, figura_jugador:Figura) -> bool():
+    '''
+    verifica las interacciones de teclado. retorna bool que depende de si se ejecuta la funcion de bajada
+    '''
+    retorno = False
+    if config.tiempo.leer_evento:
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_LEFT] : # izquierda
+            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+            figura_mover("HOR", figura_jugador, pared_juegos, -config.dimension_bloque)
+            
+
+        if keys[pygame.K_RIGHT] : # derecha 
+            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+            figura_mover("HOR", figura_jugador, pared_juegos, config.dimension_bloque)
+
+            
+        if keys[pygame.K_DOWN]: # abajo
+            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+            retorno = figura_mover("VER", figura_jugador, pared_juegos, config.dimension_bloque)
+
+    return retorno

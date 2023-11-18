@@ -5,10 +5,8 @@ autor: Carlo Morici
 
 import pygame
 import sys
-import time
 #import entorno
-from configuraciones_juego import *
-from objetos_tetris import *
+from tetris_funciones import *
 from colores import *
 
 
@@ -21,8 +19,6 @@ modalidad_juego = "CLA"
 # limitar FPS para disminuir carga de CPU (1/2)
 
 
-# Inicializar el reloj de Pygame
-reloj = pygame.time.Clock()
 
 # Configuración de la ventana del programa
 screen = crear_ventana(800, 600, "tetris pygame Carlo Morici")
@@ -30,8 +26,8 @@ screen = crear_ventana(800, 600, "tetris pygame Carlo Morici")
 
 
 # datos de configuracion
-dificultad = 1
-limite_movimientos_por_segundo = 5 
+dificultad = 5
+limite_movimientos_por_segundo = 3 
 ancho_espacio_jugable = 250
 config = config_crear(ancho_espacio_jugable, limite_movimientos_por_segundo, dificultad )
 
@@ -40,14 +36,11 @@ matriz_grilla = config.crear_grilla()
 matriz_esquinas = config.crear_puntos()
 
 figura_jugador = crear_figura(config)
-#           puntaje = 0
-
 
 # inicializacion pared de bloques
 pared_juegos = crear_pared(modalidad_juego, config)
 
-# inicializar tiempo_anterior antes del bucle
-tiempo_anterior = time.time()
+
 
 
 tocar_fondo = False
@@ -61,30 +54,11 @@ while running:
 
 
     # se controla la cantidad de movimientos con conteos de tiempo
-    tiempo_actual = time.time()
-    tiempo_transcurrido = tiempo_actual - tiempo_anterior
+    config.tiempo.actualiza_tiempo_actual()
+    config.tiempo.actualiza_tiempo_transcurrido()
+    
 
-
-
-    # Obtener las teclas presionadas para moverse sin salir del espacio jugable, solo si se cumplio el tiempo establecido entre pulsaciones
-    if config.tiempo_entre_pulsos(tiempo_transcurrido):
-        keys = pygame.key.get_pressed()
-
-        if keys[pygame.K_LEFT] : # izquierda
-            tiempo_anterior = tiempo_actual # TIEMPO
-            figura_mover("HOR", figura_jugador, pared_juegos, -config.dimension_bloque)
-            
-
-        if keys[pygame.K_RIGHT] : # derecha 
-            tiempo_anterior = tiempo_actual # TIEMPO
-            figura_mover("HOR", figura_jugador, pared_juegos, config.dimension_bloque)
-
-            
-        if keys[pygame.K_DOWN]: # abajo
-            tiempo_anterior = tiempo_actual # TIEMPO
-            tocar_fondo = figura_mover("VER", figura_jugador, pared_juegos, config.dimension_bloque)
-
-          
+    tocar_fondo = interaccion_teclado(config, pared_juegos, figura_jugador)
 
     # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
     tocar_fondo = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
@@ -108,7 +82,7 @@ while running:
     screen.fill(color_fondo_ventana) # fondo
 
     # espacio jugable
-    pygame.draw.rect(screen, color_gris_oscuro, config.espacio_jugable) # rectangulo
+    config.mostrar_espacio_jugable(screen)
 
 
     # se representa graficamente al jugador en pantalla
@@ -122,13 +96,12 @@ while running:
     mostrar_puntos(matriz_esquinas, screen, 3) # esquinas
 
     # textos
-
     config.mostrar_titulo(screen)
 
     pygame.display.flip() # bufer de pantalla
 
     # limitar FPS para disminuir carga de CPU (2/2)
-    reloj.tick(config.fps)
+    config.tiempo.limitar_fps()
 
 # Salir de Pygame
 pygame.quit()
