@@ -10,13 +10,15 @@ import time
 
 
 class Tiempos:
-    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int):
+    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int, conometro_inicio:int, cronometro_avance:int ):
         self.reloj = reloj #
         self.tiempo_actual = tiempo_actual
         self.tiempo_transcurrido = tiempo_transcurrido
         self.tiempo_anterior = tiempo_anterior #
         self.tiempo_entre_movimientos = tiempo_entre_movimientos
         self.fps = fps #
+        self.conometro_inicio = conometro_inicio
+        self.cronometro_avance = cronometro_avance
 
     def leer_evento(self) -> bool:
         return self.tiempo_transcurrido >= self.tiempo_entre_movimientos
@@ -32,24 +34,73 @@ class Tiempos:
 
     def actualiza_tiempo_transcurrido(self):
         self.tiempo_transcurrido = self.tiempo_actual - self.tiempo_anterior
+    
+    def actualiza_cronometro_inicio(self):
+        self.conometro_inicio = pygame.time.get_ticks()
+    
+    def actualiza_cronometro_avance(self):
+        self.cronometro_avance = (pygame.time.get_ticks() - self.conometro_inicio) // 1000
 
 
 
+
+class MensajesPantalla:
+    def __init__(self,fuente_texto:pygame.font.Font, texto_titulo:str, entero_puntaje:int, tupla_cronometro:tuple[int,int] ) -> None:
+        self.fuente_texto = fuente_texto
+        self.texto_titulo = texto_titulo
+        self.entero_puntaje = entero_puntaje
+        self.tupla_cronometro = tupla_cronometro
+        
+
+    def mostrar_titulo(self, screen:pygame.surface.Surface):
+       
+        texto_salida = self.fuente_texto.render(self.texto_titulo , True, color_texto_gris)
+        screen.blit(texto_salida, ( screen.get_width() // 2 - texto_salida.get_width() // 2, 8 ) ) # centrado al medio horizontal, 8 de altura
+
+        
+    def mostrar_puntaje(self, screen:pygame.surface.Surface):
+       
+        cadena_salida = f'puntuacion actual: {self.entero_puntaje}'
+        texto_salida = self.fuente_texto.render(cadena_salida , True, color_texto_gris)
+        screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 70 ) ) # centrado a 3/4 de la horizontal, 70 de altura
+    
+
+    def mostrar_cronometro(self, screen:pygame.surface.Surface):
+       
+        cadena_salida = f'cronometro    {self.tupla_cronometro[0]}:{self.tupla_cronometro[1]}'
+        texto_salida = self.fuente_texto.render(cadena_salida , True, color_texto_gris)
+        screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 130 ) ) # centrado a 3/4 de la horizontal, 130 de altura
 
         
 
 
+
 class Configuracion:
-    def __init__(self,texto_titulo:pygame.surface.Surface,tiempo:Tiempos, dificultad:int, espacio_jugable:pygame.rect.Rect, dimension_bloque:int, puntaje:int, x_jugador:int, y_jugador:int):
-        self.texto_titulo = texto_titulo #
+    def __init__(self, tiempo:Tiempos, mensajes_pantalla:MensajesPantalla, dificultad:int, espacio_jugable:pygame.rect.Rect, espacio_seguro:pygame.rect.Rect, dimension_bloque:int, x_jugador:int, y_jugador:int):
         self.dificultad = dificultad
         self.espacio_jugable = espacio_jugable # 
+        self.espacio_seguro = espacio_seguro # 
         self.dimension_bloque = dimension_bloque
-        self.puntaje = puntaje #
         self.x_jugador = x_jugador #
         self.y_jugador = y_jugador #
-        self.texto_titulo = texto_titulo #
         self.tiempo = tiempo #
+        self.mensajes_pantalla = mensajes_pantalla #
+
+    def cronometro(self, screen:pygame.surface.Surface):
+        '''
+        Maneja el cronometro durante la partida
+        '''
+        self.tiempo.actualiza_cronometro_avance()
+
+        
+        tupla = ( int(self.tiempo.cronometro_avance / 60), self.tiempo.cronometro_avance % 60 )
+
+
+        self.mensajes_pantalla.tupla_cronometro = tupla
+        self.mensajes_pantalla.mostrar_cronometro(screen)
+        
+
+
 
 
     def crear_grilla(self) -> list[tuple]:
@@ -87,25 +138,62 @@ class Configuracion:
             
 
         return matriz_puntos
-
-    def mostrar_titulo(self, screen:pygame.surface.Surface):
-        screen.blit(self.texto_titulo, (screen.get_width() // 2 - self.texto_titulo.get_width() // 2, 8)) # titulo
-
+    
     def mostrar_espacio_jugable(self, screen:pygame.surface.Surface):
-        pygame.draw.rect(screen, color_gris_oscuro, self.espacio_jugable)
+        '''
+        recibe el screen donde dibujar el espacio jugable y ejecuta el dibujo
+        '''
+        if self.dificultad == 1:
+            color = color_facil
 
+        elif self.dificultad == 2:
+            color = color_normal
 
+        elif self.dificultad == 3:
+            color = color_dificil
 
-def tiempo_crear(limite_movimientos_por_segundo:int) -> Tiempos:
+        pygame.draw.rect(screen, color, self.espacio_jugable)
+  
+    def mostrar_espacio_seguro(self, screen:pygame.surface.Surface):
+        '''
+        recibe el screen donde dibujar el espacio jugable y ejecuta el dibujo
+        '''
+        pygame.draw.rect(screen, color_espacio_seguro, self.espacio_seguro)
+
+    def subir_puntuacion(self, puntaje_subida:int):
+        '''
+        sube el puntaje el cual depende de la dificultad y la cantidad de filas eliminadas
+        '''
+        aumento = puntaje_subida * self.dificultad * 10
+        self.mensajes_pantalla.entero_puntaje += aumento
+
+def mensajes_pantalla_crear() -> MensajesPantalla:
+    '''
+    crea el contenido inicial para los mensajes en pantalla
+    '''
+
+    fuente_texto = pygame.font.Font(None, 36)
+    texto_titulo = "JUGUEMOS AL TETRIS"
+    entero_puntaje = 0
+    tupla_tiempo = (0, 0)
+
+    retorno = MensajesPantalla(fuente_texto, texto_titulo, entero_puntaje, tupla_tiempo)
+    return retorno
+        
+
+def tiempo_crear(limite_movimientos_por_segundo:int, fps:int) -> Tiempos:
+    '''
+    crea el contenido inicial para los datos de tiempo
+    '''
 
     tiempo_actual = time.time() #
-    tiempo_anterior = time.time()#
-    fps = (limite_movimientos_por_segundo * 4) #
+    tiempo_anterior = time.time() #
     tiempo_entre_movimientos = 1 / limite_movimientos_por_segundo #
     tiempo_transcurrido = tiempo_actual - tiempo_anterior
-    reloj = pygame.time.Clock()#
+    reloj = pygame.time.Clock() #
+    cronometro = 0
 
-    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps)
+    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps, cronometro, cronometro)
     
     return tiempo_retorno
 
@@ -117,30 +205,30 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     '''
     # espacio jugable
     alto_espacio_jugable = 2 * ancho_espacio_jugable
-    espacio_jugable = pygame.Rect(50, 30, ancho_espacio_jugable, alto_espacio_jugable) #
+    x_espacio_jugable = 50
+    y_espacio_jugable = 230
+    espacio_jugable = pygame.Rect(x_espacio_jugable, y_espacio_jugable, ancho_espacio_jugable, alto_espacio_jugable) #
+     
+    # dimension_bloque
     dimension_bloque = int (ancho_espacio_jugable / 10) #
-
-
-    # tiempo entre movimientos
-#
-
-    
-
+  
     # posicion inicial del jugador
     x_jugador = int((espacio_jugable.left + espacio_jugable.right) / 2 - dimension_bloque) #
-    y_jugador = espacio_jugable.top #
+    y_jugador = espacio_jugable.top - 150 # (con espacio para que la figura se cree fuera del area de juego)
 
+    # espacio_seguro para el jugador
+    alto_espacio_seguro = y_espacio_jugable - y_jugador 
+    espacio_seguro = pygame.Rect(x_espacio_jugable, y_jugador, ancho_espacio_jugable, alto_espacio_seguro) #
     
-    # Texto a mostrar en pantalla
-    fuente_texto = pygame.font.Font(None, 36)
-    texto_titulo = fuente_texto.render("Juguemos al tetris", True, color_morado) #
-
-    # puntaje
-    puntaje = 0 #
-
     # tiempos
-    sub_tiempo = tiempo_crear(limite_movimientos_por_segundo)
-    retorno = Configuracion(texto_titulo, sub_tiempo, dificultad, espacio_jugable, dimension_bloque, puntaje, x_jugador, y_jugador)
+    fps = 60
+    tiempos = tiempo_crear(limite_movimientos_por_segundo, fps)
+
+    # mensaje en pantalla
+    mensajes_pantalla = mensajes_pantalla_crear()
+
+    # retorno
+    retorno = Configuracion(tiempos, mensajes_pantalla, dificultad, espacio_jugable, espacio_seguro, dimension_bloque, x_jugador, y_jugador)
     return retorno
 
     
@@ -192,28 +280,83 @@ def crear_figura(config: Configuracion) -> Figura:
     opciones_letra = ["I", "O", "T", "L"]
     letra = random.choice(opciones_letra)
 
+    coord_bloque_0 = ( config.x_jugador , config.y_jugador )
     match letra:
         case "I": # rectangulo, 4 bloques apilados en una fila
-            lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo 1
-            lista_bloques[2].cuadro.y = lista_bloques[1].cuadro.y +  config.dimension_bloque #abajo 2 
-            lista_bloques[3].cuadro.y = lista_bloques[2].cuadro.y +  config.dimension_bloque #abajo 3
+
+            
+            coord_bloque_0 = ( ( lista_bloques[0].cuadro.x ) , ( lista_bloques[0].cuadro.y ) )
+            # se mantiene
+
+            coord_bloque_1 = ( ( coord_bloque_0[0] ), ( coord_bloque_0[1] + config.dimension_bloque ) )
+            lista_bloques[1].cambiar_coordenadas(coord_bloque_1)
+
+            coord_bloque_2 = (  (coord_bloque_1[0] ) , ( coord_bloque_1[1] + config.dimension_bloque ) )
+            lista_bloques[2].cambiar_coordenadas(coord_bloque_2)
+
+            coord_bloque_3 = ( ( coord_bloque_2[0] ) , ( coord_bloque_2[1] + config.dimension_bloque ) )
+            lista_bloques[3].cambiar_coordenadas(coord_bloque_3)
+
+            # lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo 1
+            # lista_bloques[2].cuadro.y = lista_bloques[1].cuadro.y +  config.dimension_bloque #abajo 2 
+            # lista_bloques[3].cuadro.y = lista_bloques[2].cuadro.y +  config.dimension_bloque #abajo 3
 
         case "O": # cuadrado, dos filas de dos bloques juntas
-            lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo
-            lista_bloques[2].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #derecha
-            lista_bloques[3].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #diagonal 1/2
-            lista_bloques[3].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #diagonal 2/2
+
+            coord_bloque_0 = ( ( lista_bloques[0].cuadro.x ) , ( lista_bloques[0].cuadro.y ) )
+            # se mantiene
+
+            coord_bloque_1 = ( ( coord_bloque_0[0] ), ( coord_bloque_0[1] + config.dimension_bloque ) )
+            lista_bloques[1].cambiar_coordenadas(coord_bloque_1)
+
+            coord_bloque_2 = (  (coord_bloque_0[0] + config.dimension_bloque ) , ( coord_bloque_0[1] ) )
+            lista_bloques[2].cambiar_coordenadas(coord_bloque_2)
+
+            coord_bloque_3 = (  (coord_bloque_0[0] + config.dimension_bloque ) , ( coord_bloque_0[1] + config.dimension_bloque ) )
+            lista_bloques[3].cambiar_coordenadas(coord_bloque_3)
+
+
+            # lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo
+            # lista_bloques[2].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #derecha
+            # lista_bloques[3].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #diagonal 1/2
+            # lista_bloques[3].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #diagonal 2/2
 
         case "T": # literalmente la forma de una T
-            lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo
-            lista_bloques[2].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #derecha
-            lista_bloques[3].cuadro.x = lista_bloques[0].cuadro.x -  config.dimension_bloque #izquierda
+
+            coord_bloque_0 = ( ( lista_bloques[0].cuadro.x ) , ( lista_bloques[0].cuadro.y ) )
+            #se mantiene
+
+            coord_bloque_1 = ( ( coord_bloque_0[0] ), ( coord_bloque_0[1] + config.dimension_bloque ) )
+            lista_bloques[1].cambiar_coordenadas(coord_bloque_1)
+
+            coord_bloque_2 = (  (coord_bloque_0[0] + config.dimension_bloque ) , ( coord_bloque_0[1] ) )
+            lista_bloques[2].cambiar_coordenadas(coord_bloque_2)
+
+            coord_bloque_3 = ( ( coord_bloque_0[0] - config.dimension_bloque ) , ( coord_bloque_0[1] ) )
+            lista_bloques[3].cambiar_coordenadas(coord_bloque_3)
+
+
+            # lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo
+            # lista_bloques[2].cuadro.x = lista_bloques[0].cuadro.x +  config.dimension_bloque #derecha
+            # lista_bloques[3].cuadro.x = lista_bloques[0].cuadro.x -  config.dimension_bloque #izquierda
 
         case "L": # literalmente la forma de una L
-            lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo 1
-            lista_bloques[2].cuadro.y = lista_bloques[1].cuadro.y +  config.dimension_bloque #abajo 2 
-            lista_bloques[3].cuadro.y = lista_bloques[2].cuadro.y #diagonal 1/2
-            lista_bloques[3].cuadro.x = lista_bloques[2].cuadro.x +  config.dimension_bloque #diagonal 1/2
+
+            
+
+            coord_bloque_1 = ( ( coord_bloque_0[0] ), ( coord_bloque_0[1] + config.dimension_bloque ) )
+            lista_bloques[1].cambiar_coordenadas(coord_bloque_1)
+
+            coord_bloque_2 = ( ( coord_bloque_1[0] ) , ( coord_bloque_1[1] + config.dimension_bloque ))
+            lista_bloques[2].cambiar_coordenadas(coord_bloque_2)
+
+            coord_bloque_3 = ( ( coord_bloque_2[0] + config.dimension_bloque ) , ( coord_bloque_2[1]) )
+            lista_bloques[3].cambiar_coordenadas(coord_bloque_3)
+
+            # lista_bloques[1].cuadro.y = lista_bloques[0].cuadro.y +  config.dimension_bloque #abajo 1
+            # lista_bloques[2].cuadro.y = lista_bloques[1].cuadro.y +  config.dimension_bloque #abajo 2 
+            # lista_bloques[3].cuadro.y = lista_bloques[2].cuadro.y #diagonal 1/2
+            # lista_bloques[3].cuadro.x = lista_bloques[2].cuadro.x +  config.dimension_bloque #diagonal 1/2
 
 
     
@@ -241,6 +384,7 @@ def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     '''
 
     tope_inicial = config.espacio_jugable.bottom - config.dimension_bloque
+    tope_game_over = config.espacio_jugable.top
 
 
     # ya obtenida la informacion de los distintos datos de una vertical, se hace un proceso similar para obtener 
@@ -252,13 +396,13 @@ def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     #debugeo_columnas = 0 #debug columnas 1/2
 
     estructura_pared = [] # estructura matricial a retornar
-    for x in range( config.espacio_jugable.left,  config.espacio_jugable.right, config.dimension_bloque): # x pertenece a [left; rigth-config.dimension_bloque]
+    for x in range( config.espacio_jugable.left,  config.espacio_jugable.right, config.dimension_bloque): # x pertenece a [left; rigth-config.dimension_bloque] (numeros ascendentes)
 
        
         bloques_en_fila = [] # se crea bloques_en_fila:list[dict] 
-        for y in range( tope_inicial, ( config.espacio_jugable.top - 1), -config.dimension_bloque): # y pertenece a [bottom-config.dimension_bloque; top] 
+        for y in range( tope_inicial, ( config.espacio_jugable.top - 1), -config.dimension_bloque): # y pertenece a [bottom-config.dimension_bloque; top] (numeros descendentes)
             diccionario_bloque_en_fila = {
-                "pos_y": y,
+                "pos_y": y, # guarda la coordenada y de la pantalla, indistinto a la coordenada y de la matriz
                 "bool_bloque": False,
                 "datos_bloque": None # inicialmente vacio hasta ser ocupado
             }
@@ -280,29 +424,117 @@ def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     #    debugeo_columnas +=1
 
   
-    retorno = Pared(tipo_juego, tope_inicial, estructura_pared)
+    retorno = Pared(tipo_juego, tope_inicial, tope_game_over, estructura_pared)
     return retorno
 
-def interaccion_teclado(config:Configuracion, pared_juegos:Pared, figura_jugador:Figura) -> bool():
+def interaccion_teclado(config:Configuracion, tecla_pulsada:int, pared_juegos:Pared, figura_jugador:Figura) -> bool():
     '''
     verifica las interacciones de teclado. retorna bool que depende de si se ejecuta la funcion de bajada
     '''
+    
     retorno = False
     if config.tiempo.leer_evento:
-        keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_LEFT] : # izquierda
-            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+
+        if tecla_pulsada == pygame.K_LEFT: # izq
             figura_mover("HOR", figura_jugador, pared_juegos, -config.dimension_bloque)
-            
 
-        if keys[pygame.K_RIGHT] : # derecha 
-            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        elif tecla_pulsada == pygame.K_RIGHT: # der
             figura_mover("HOR", figura_jugador, pared_juegos, config.dimension_bloque)
 
-            
-        if keys[pygame.K_DOWN]: # abajo
-            config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        elif tecla_pulsada == pygame.K_DOWN: # aba
             retorno = figura_mover("VER", figura_jugador, pared_juegos, config.dimension_bloque)
+        
+        elif tecla_pulsada == pygame.K_UP: # arr
+            print("tecla arriba inicio")
+            if figura_rotar(figura_jugador, pared_juegos):
+                config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+                print("tecla arriba fin")
+
+
+
+        # # mantiene pulsacion
+        # keys = pygame.key.get_pressed()
+
+        # if keys[pygame.K_LEFT] : # izquierda
+        #     config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        #     figura_mover("HOR", figura_jugador, pared_juegos, -config.dimension_bloque)
+            
+
+        # if keys[pygame.K_RIGHT] : # derecha 
+        #     config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        #     figura_mover("HOR", figura_jugador, pared_juegos, config.dimension_bloque)
+
+            
+        # if keys[pygame.K_DOWN]: # abajo
+        #     config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        #     retorno = figura_mover("VER", figura_jugador, pared_juegos, config.dimension_bloque)
+
+            
+        # if keys[pygame.K_UP]: # arriba
+        #     print("tecla arriba inicio")
+        #     if figura_rotar(figura_jugador, pared_juegos): # sin rotacion efectiva no hay actualizacion en tiempos
+        #         config.tiempo.actualiza_tiempo_anterior() # TIEMPO
+        #         print("tecla arriba fin")
+                
+            
+            
 
     return retorno
+
+
+def figura_rotar(figura_jugador:Figura, pared_juegos:Pared) -> bool:
+    '''
+    controla la rotacion en la figura_jugador.
+    retorna True en caso de que el proceso sea exitoso y False en caso de fallar
+    '''
+
+    lista_bloques_original = copy.deepcopy(figura_jugador.lista_bloques) # respaldo de la figura
+    rotacion_original = figura_jugador.rotacion
+    letra = figura_jugador.letra
+
+    
+    if letra == "L":
+        figura_jugador.rotar_L()
+
+
+    if letra == "T":
+        figura_jugador.rotar_T()
+
+
+    if letra == "I":
+        figura_jugador.rotar_I()
+
+    # cuadrados no rotan
+
+
+
+    retorno = True
+
+    # si se detectan choques en la figura entonces se regresa a la version respaldada
+    if ( figura_verificar_devolucion("HOR", figura_jugador, pared_juegos) != 0 ) or  ( figura_verificar_devolucion("VER", figura_jugador, pared_juegos) != 0 ):
+        print(f'figura_rotar: se detecto que se paso un limite, se regresa al respaldo')
+        figura_jugador.lista_bloques = lista_bloques_original
+        figura_jugador.rotacion = rotacion_original
+        retorno = False
+
+    return retorno
+
+
+
+def leer_evento() -> tuple[bool, int]:
+    '''
+    lee posible evento de cierre del bucle y de tecla presionada.
+    retorna valores por defecto en caso de no detectarse eventos.
+    retorno = (running, tecla_pulsada)
+    '''
+    retorno_0 = True
+    retorno_1 = None
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            retorno_0 = False
+        elif event.type == pygame.KEYDOWN:
+            retorno_1 = copy.deepcopy(event.key)
+
+    return (retorno_0, retorno_1)
