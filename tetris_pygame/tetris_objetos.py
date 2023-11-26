@@ -15,6 +15,30 @@ class Bloque:
         self.color = color
         self.cuadro = cuadro
 
+    @property
+    def x(self):
+        return self.cuadro.x
+
+    @property
+    def y(self):
+        return self.cuadro.y
+
+    @property
+    def top(self):
+        return self.cuadro.top
+
+    @property
+    def left(self):
+        return self.cuadro.left
+
+    @property
+    def right(self):
+        return self.cuadro.right
+
+    @property
+    def bottom(self):
+        return self.cuadro.bottom
+
     def mover(self, orientacion:str, cantidad:int):
         '''
         mueve un bloque segun una orientacion ("HOR" | "VER") y una cantidad de espacios
@@ -300,10 +324,7 @@ class Figura:
             self.rotacion = 0
         else:
             self.rotacion += 1
-            
-
-
-    
+   
 
 class Pared:
     def __init__(self, tipo_pared:str, tope_inicial:int, tope_game_over:int ,estructura_pared: list[dict[int, int, list[dict[int, bool, Bloque]]]]):
@@ -323,6 +344,10 @@ class Pared:
         self.tope_game_over = tope_game_over
 
     def agregar_bloques_desde_figura(self, figura_actual: Figura) -> bool:
+        '''
+        agranda la pared verificando la lista de bloques en la figura cuyas coordenadas deben estar representadas en las coordenadas de la pared.
+        en caso de haber almenos un bloque que no coincide con las coordenadas propuestas se considera game over
+        '''
 
         for bloque_figura in figura_actual.lista_bloques: # recorrer los bloques en la figura
             
@@ -408,9 +433,6 @@ class Pared:
 
 
         return retorno
-
-
-
 
 def crear_lista_bloques_iniciales(color_RGB_bloque:tuple[int, int, int], dim_bloque:int, x_inicial:int, y_inicial:int) -> list[Bloque]:
     '''

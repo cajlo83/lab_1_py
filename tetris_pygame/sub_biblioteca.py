@@ -129,8 +129,3 @@ def capitalizar_palabras(palabra:str) -> str:
 
     return palabra.capitalize()
 
-
-def armar_directorio_stark_5(nombre_archivo:str) -> str:
-    directorio_trabajo = os.getcwd()
-    directorio_archivo = f'{directorio_trabajo}\lab_1_py\stark_5\{nombre_archivo}'
-    return directorio_archivo

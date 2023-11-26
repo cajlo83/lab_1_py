@@ -8,17 +8,18 @@ import sys
 #import entorno
 from tetris_funciones import *
 from colores import *
+from tetris_db import *
 
-
+# obtener directorio
+directorio = armar_directorio_tetris_pygame("prueba_db_puntajes.db")
 # Inicializar Pygame
 pygame.init()
 
 # datos de la partida
 modalidad_juego = "CLA"
 
-# limitar FPS para disminuir carga de CPU (1/2)
-
-
+# se crea la DB en caso que no exista
+db_crear(directorio)
 
 # Configuración de la ventana del programa
 screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
@@ -26,8 +27,8 @@ screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
 
 
 # datos de configuracion
-dificultad = 1
-limite_movimientos_por_segundo = 3 
+dificultad = 2
+limite_movimientos_por_segundo = 4 * dificultad
 ancho_espacio_jugable = 250
 config = config_crear(ancho_espacio_jugable, limite_movimientos_por_segundo, dificultad )
 
@@ -48,6 +49,8 @@ print(f'fondo espacio jugable == {config.espacio_jugable.bottom}')
 config.tiempo.actualiza_cronometro_inicio()
 # Bucle principal
 running = True
+pausa = False
+game_over = False
 while running:
 
     # se leen eventos
@@ -56,15 +59,23 @@ while running:
     tecla_pulsada = tupla_eventos[1] # se verifica actividad del teclado
 
 
-    # se controla la cantidad de movimientos con conteos de tiempo
-    config.tiempo.actualiza_tiempo_actual()
-    config.tiempo.actualiza_tiempo_transcurrido()
-    
+    # pausa
+    if not game_over:
+        pausa = config.estado_pausa(pausa, tecla_pulsada)
 
-    tocar_fondo_manual = interaccion_teclado(config, tecla_pulsada, pared_juegos, figura_jugador)
+            
+    if not pausa:
 
-    # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
-    tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
+        # se controlan datos de tiempo
+        config.tiempo.actualiza_tiempo_actual()
+        config.tiempo.actualiza_tiempo_transcurrido()
+        config.tiempo.actualiza_cronometro_avance()
+        
+
+        tocar_fondo_manual = controles_de_figura(config, tecla_pulsada, pared_juegos, figura_jugador)
+
+        # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
+        tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
 
     # verifica un toque te tope
     if tocar_fondo_manual or tocar_fondo_automatico: 
@@ -76,47 +87,55 @@ while running:
         else:
             print("\t\tGAME CONTINUE C:")
 
-        # buscar filas ganadoras
-        lista_ganadores = pared_juegos.verificar_ganadores()
-        # borrar filas ganadoras
-        puntaje_subida = pared_juegos.eliminar_filas(lista_ganadores)
-        # subir puntos 
-        config.subir_puntuacion(puntaje_subida)
+            # buscar filas ganadoras
+            lista_ganadores = pared_juegos.verificar_ganadores()
+            # borrar filas ganadoras
+            puntaje_subida = pared_juegos.eliminar_filas(lista_ganadores)
+            # subir puntos 
+            config.subir_puntuacion(puntaje_subida)
 
-        # crear nueva figura para el jugador
-        figura_jugador = crear_figura(config)
-
+            # crear nueva figura para el jugador
+            figura_jugador = crear_figura(config)
 
 
     ########### Dibujar la pantalla ###########
 
-    # cronometro
-    config.cronometro(screen)
-
     # fondo ventana
     screen.fill(color_fondo_ventana) # fondo
 
-    # espacio seguro
-    config.mostrar_espacio_jugable(screen)
 
-    # espacio jugable
-    config.mostrar_espacio_seguro(screen)
-
-
-    # se representa graficamente al jugador en pantalla
-    figura_jugador.mostrar(screen) 
-
-    # se muestran los bloques de la pared
-    pared_juegos.mostrar(screen)
-
-    # elementos esteticos
-    mostrar_grilla(matriz_grilla,screen) # grilla
-    mostrar_puntos(matriz_esquinas, screen, 3) # esquinas
-
-    # textos
-    config.cronometro(screen)
-    config.mensajes_pantalla.mostrar_titulo(screen)
+    #dependen del juego en ejecucion:
     config.mensajes_pantalla.mostrar_puntaje(screen)
+    # dependen del game over
+    if game_over:
+        config.mensajes_pantalla.mostrar_titulo(screen, "GAME OVER")
+        nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un ID entre 3 y 8 caracteres:     ", 100, 400)
+        db_insertar_puntaje(directorio, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
+        mostrar_top_5(directorio)
+        break # salir del bucle principal
+
+        # print(f'el jugador es: {nombre_player} y su score: {config.mensajes_pantalla.entero_puntaje}')
+    
+    else:
+        # espacios
+        config.espacio_seguro.mostrar(screen)
+        config.espacio_jugable.mostrar(screen)
+            
+        # dependen de la pausa:
+        if not(pausa):
+            # textos en pantalla
+            config.mensajes_pantalla.mostrar_titulo(screen)
+            config.mostrar_cronometro(screen) # evitemos bugs
+            
+            # gameplaying no se muestra durante la pausa, aqui no toleramos tramposos
+            figura_jugador.mostrar(screen) 
+            pared_juegos.mostrar(screen)
+        else:
+            config.mensajes_pantalla.mostrar_titulo(screen, "PAUSA")
+        
+        # elementos esteticos se dibujan de ultimo
+        mostrar_grilla(matriz_grilla,screen) # grilla
+        mostrar_puntos(matriz_esquinas, screen, 3) # esquinas
 
     pygame.display.flip() # bufer de pantalla
 

@@ -2,7 +2,6 @@ import pygame
 import sys
 import time
 import typing
-import sub_biblioteca
 from colores import *
 from tetris_objetos import *
 import time
@@ -10,7 +9,7 @@ import time
 
 
 class Tiempos:
-    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int, conometro_inicio:int, cronometro_avance:int ):
+    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int, conometro_inicio:int, cronometro_avance:int, pausa_inicio:int ):
         self.reloj = reloj #
         self.tiempo_actual = tiempo_actual
         self.tiempo_transcurrido = tiempo_transcurrido
@@ -19,6 +18,7 @@ class Tiempos:
         self.fps = fps #
         self.conometro_inicio = conometro_inicio
         self.cronometro_avance = cronometro_avance
+        self.pausa_inicio = pausa_inicio
 
     def leer_evento(self) -> bool:
         return self.tiempo_transcurrido >= self.tiempo_entre_movimientos
@@ -40,9 +40,19 @@ class Tiempos:
     
     def actualiza_cronometro_avance(self):
         self.cronometro_avance = (pygame.time.get_ticks() - self.conometro_inicio) // 1000
+    
+    def inicia_pausa(self):
+        self.pausa_inicio = pygame.time.get_ticks()
 
+    def termina_pausa(self) -> int:
+        '''
+        se suma el tiempo de pausa a la hora de inicio de ejecucion para tapar el desfase de tiempo causado por el estado de pausa
+        '''
 
-
+        hora_actual = pygame.time.get_ticks()
+        tiempo_transcurrido = hora_actual - self.pausa_inicio
+        self.conometro_inicio += tiempo_transcurrido
+        
 
 class MensajesPantalla:
     def __init__(self,fuente_texto:pygame.font.Font, texto_titulo:str, entero_puntaje:int, tupla_cronometro:tuple[int,int] ) -> None:
@@ -52,10 +62,65 @@ class MensajesPantalla:
         self.tupla_cronometro = tupla_cronometro
         
 
-    def mostrar_titulo(self, screen:pygame.surface.Surface):
+    def mostrar_titulo(self, screen:pygame.surface.Surface, texto_alternativo:str = None):
        
-        texto_salida = self.fuente_texto.render(self.texto_titulo , True, color_texto_gris)
+        if valida_lista(texto_alternativo, 1, True):
+            texto_salida = self.fuente_texto.render(texto_alternativo , True, color_negro)
+        else:
+            texto_salida = self.fuente_texto.render(self.texto_titulo , True, color_texto_gris)
+
         screen.blit(texto_salida, ( screen.get_width() // 2 - texto_salida.get_width() // 2, 8 ) ) # centrado al medio horizontal, 8 de altura
+
+        
+    def pedir_texto(self, screen:pygame.surface.Surface, cadena_informativa:str, x:int, y:int) -> str:
+        '''
+        muestra un cuadro en pantalla solicitando ingresar datos por teclado
+        '''
+        pantalla_anterior = screen.copy() # copiar la pantalla antes del inicio de la funcion
+
+        # if valida_lista(cadena_informativa, 1, True):
+        #     texto_salida = self.fuente_texto.render(cadena_informativa , False , color_negro, color_blanco)
+        #     screen.blit(texto_salida, ( x, y ) ) 
+
+        if not valida_lista(cadena_informativa, 1, True):
+            print("pedir texto: cadena_informativa esta vacia")
+        else:
+                
+            text = ""
+            # bucle para recibir datos de teclado y mostrar su cambio a medida que se detectan
+            continuar = True
+            while continuar:
+                for event in pygame.event.get(): # salida de pygame
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.KEYDOWN: # tecla enter para terminar etapa de ingreso de datos
+                        if event.key == pygame.K_RETURN:
+                            # Guardar la puntuación
+                            #guardar_puntuacion(text, puntuacion)
+                            if valida_lista(text, 3, True): # text debe ser almenos de longitud 3 antes de poder salir
+                                continuar = False
+                            else: 
+                                print("la palabra en text es aun muy corta")
+
+                        elif event.key == pygame.K_BACKSPACE: # tecla borrar
+                            text = text[:-1]     
+                            screen.blit(pantalla_anterior, (0,0)) # se coloca una copia de la pantalla anterior antes de mostrar cambios por borrado
+
+                        else: # demas teclas
+                            if event.unicode.isalnum(): # solo tomar caracteres alfanumericos
+                                text += event.unicode
+
+                #screen.fill((255, 255, 255))
+
+                # Renderizar el texto
+                input_text = self.fuente_texto.render(f'{cadena_informativa}{text}', False, color_texto_gris, color_blanco)
+                screen.blit(input_text, (x, y))
+
+                pygame.display.flip()
+
+            return text[:8] # retorna solo los primeros 8 caracteres
+
 
         
     def mostrar_puntaje(self, screen:pygame.surface.Surface):
@@ -71,12 +136,9 @@ class MensajesPantalla:
         texto_salida = self.fuente_texto.render(cadena_salida , True, color_texto_gris)
         screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 130 ) ) # centrado a 3/4 de la horizontal, 130 de altura
 
-        
-
-
 
 class Configuracion:
-    def __init__(self, tiempo:Tiempos, mensajes_pantalla:MensajesPantalla, dificultad:int, espacio_jugable:pygame.rect.Rect, espacio_seguro:pygame.rect.Rect, dimension_bloque:int, x_jugador:int, y_jugador:int):
+    def __init__(self, tiempo:Tiempos, mensajes_pantalla:MensajesPantalla, dificultad:int, espacio_jugable:Bloque, espacio_seguro:Bloque, dimension_bloque:int, x_jugador:int, y_jugador:int):
         self.dificultad = dificultad
         self.espacio_jugable = espacio_jugable # 
         self.espacio_seguro = espacio_seguro # 
@@ -86,13 +148,13 @@ class Configuracion:
         self.tiempo = tiempo #
         self.mensajes_pantalla = mensajes_pantalla #
 
-    def cronometro(self, screen:pygame.surface.Surface):
-        '''
-        Maneja el cronometro durante la partida
-        '''
-        self.tiempo.actualiza_cronometro_avance()
 
-        
+  #  def mostrar_mensaje(self, screen, )
+
+    def mostrar_cronometro(self, screen:pygame.surface.Surface):
+        '''
+        muestra el cronometro 
+        '''                
         tupla = ( int(self.tiempo.cronometro_avance / 60), self.tiempo.cronometro_avance % 60 )
 
 
@@ -101,6 +163,19 @@ class Configuracion:
         
 
 
+    def estado_pausa(self, pausa:bool, tecla_pulsada:int ) -> bool:
+        '''
+        verifica si hay que entrar o salir de pausa y gestiona el tiempo transcurrido de pormedio
+        '''
+
+        if tecla_pulsada == pygame.K_p:
+            pausa = not(pausa)
+            if pausa:
+                self.tiempo.inicia_pausa()
+            else:
+                self.tiempo.termina_pausa()
+
+        return pausa
 
 
     def crear_grilla(self) -> list[tuple]:
@@ -180,7 +255,6 @@ def mensajes_pantalla_crear() -> MensajesPantalla:
     retorno = MensajesPantalla(fuente_texto, texto_titulo, entero_puntaje, tupla_tiempo)
     return retorno
         
-
 def tiempo_crear(limite_movimientos_por_segundo:int, fps:int) -> Tiempos:
     '''
     crea el contenido inicial para los datos de tiempo
@@ -192,12 +266,11 @@ def tiempo_crear(limite_movimientos_por_segundo:int, fps:int) -> Tiempos:
     tiempo_transcurrido = tiempo_actual - tiempo_anterior
     reloj = pygame.time.Clock() #
     cronometro = 0
+    
 
-    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps, cronometro, cronometro)
+    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps, cronometro, cronometro, cronometro)
     
     return tiempo_retorno
-
-
 
 def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, dificultad:int ) -> Configuracion:
     '''
@@ -205,9 +278,19 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     '''
     # espacio jugable
     alto_espacio_jugable = 2 * ancho_espacio_jugable
-    x_espacio_jugable = 50
-    y_espacio_jugable = 230
-    espacio_jugable = pygame.Rect(x_espacio_jugable, y_espacio_jugable, ancho_espacio_jugable, alto_espacio_jugable) #
+    espacio_jugable_x = 50
+    espacio_jugable_y = 230
+    espacio_jugable_cuadro = pygame.Rect(espacio_jugable_x, espacio_jugable_y, ancho_espacio_jugable, alto_espacio_jugable) #
+    if dificultad == 1:
+        espacio_jugable_color = color_facil
+
+    elif dificultad == 2:
+        espacio_jugable_color = color_normal
+
+    elif dificultad == 3:
+        espacio_jugable_color = color_dificil
+    espacio_jugable = Bloque(espacio_jugable_color, espacio_jugable_cuadro)
+
      
     # dimension_bloque
     dimension_bloque = int (ancho_espacio_jugable / 10) #
@@ -217,8 +300,9 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     y_jugador = espacio_jugable.top - 150 # (con espacio para que la figura se cree fuera del area de juego)
 
     # espacio_seguro para el jugador
-    alto_espacio_seguro = y_espacio_jugable - y_jugador 
-    espacio_seguro = pygame.Rect(x_espacio_jugable, y_jugador, ancho_espacio_jugable, alto_espacio_seguro) #
+    alto_espacio_seguro = espacio_jugable_y - y_jugador 
+    espacio_seguro_cuadro = pygame.Rect(espacio_jugable_x, y_jugador, ancho_espacio_jugable, alto_espacio_seguro) #
+    espacio_seguro = Bloque(color_espacio_seguro, espacio_seguro_cuadro)
     
     # tiempos
     fps = 60
@@ -231,9 +315,6 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     retorno = Configuracion(tiempos, mensajes_pantalla, dificultad, espacio_jugable, espacio_seguro, dimension_bloque, x_jugador, y_jugador)
     return retorno
 
-    
-
-
 def crear_ventana(ancho:int, alto:int, texto_titulo:str) -> pygame.surface.Surface:
     '''
     Recibe: el alto, el ancho y el texto del titulo de la ventana
@@ -244,28 +325,22 @@ def crear_ventana(ancho:int, alto:int, texto_titulo:str) -> pygame.surface.Surfa
     pygame.display.set_caption(texto_titulo)
     return ventana
 
-
-
-
 def mostrar_grilla (lista_lineas:list[tuple], screen:pygame.surface.Surface):
 
-    if sub_biblioteca.valida_lista(lista_lineas):
+    if valida_lista(lista_lineas):
         for linea in lista_lineas:
             pygame.draw.line(screen, color_negro, linea[0], linea[1])
- 
-        
+         
 def mostrar_puntos(matriz_puntos:list[list[tuple]], screen:pygame.surface.Surface, radio: int):
     
     
-    if sub_biblioteca.valida_lista(matriz_puntos):
+    if valida_lista(matriz_puntos):
         for fila in matriz_puntos:
-            if sub_biblioteca.valida_lista(fila):
+            if valida_lista(fila):
                 for punto in fila:
                     pygame.draw.circle(screen, color_negro, punto, radio)
             else:
                 break
-
-
 
 def crear_figura(config: Configuracion) -> Figura:
     '''
@@ -369,8 +444,6 @@ def crear_figura(config: Configuracion) -> Figura:
 
     return figura_retorno
 
-
-
 def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     '''
     Crea una nueva pared que contendra la informacion de los bloques caidos
@@ -427,13 +500,13 @@ def crear_pared(tipo_juego:str, config: Configuracion) -> Pared:
     retorno = Pared(tipo_juego, tope_inicial, tope_game_over, estructura_pared)
     return retorno
 
-def interaccion_teclado(config:Configuracion, tecla_pulsada:int, pared_juegos:Pared, figura_jugador:Figura) -> bool():
+def controles_de_figura(config:Configuracion, tecla_pulsada:int, pared_juegos:Pared, figura_jugador:Figura) -> bool():
     '''
-    verifica las interacciones de teclado. retorna bool que depende de si se ejecuta la funcion de bajada
+    verifica las interacciones de teclado relacionadas con el control de la figura. retorna bool que depende de si se ejecuta la funcion de bajada y se toca fondo
     '''
     
     retorno = False
-    if config.tiempo.leer_evento:
+    if config.tiempo.leer_evento():
 
 
         if tecla_pulsada == pygame.K_LEFT: # izq
@@ -482,7 +555,6 @@ def interaccion_teclado(config:Configuracion, tecla_pulsada:int, pared_juegos:Pa
 
     return retorno
 
-
 def figura_rotar(figura_jugador:Figura, pared_juegos:Pared) -> bool:
     '''
     controla la rotacion en la figura_jugador.
@@ -520,8 +592,6 @@ def figura_rotar(figura_jugador:Figura, pared_juegos:Pared) -> bool:
 
     return retorno
 
-
-
 def leer_evento() -> tuple[bool, int]:
     '''
     lee posible evento de cierre del bucle y de tecla presionada.
@@ -538,3 +608,4 @@ def leer_evento() -> tuple[bool, int]:
             retorno_1 = copy.deepcopy(event.key)
 
     return (retorno_0, retorno_1)
+
