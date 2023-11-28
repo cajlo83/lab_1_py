@@ -8,34 +8,35 @@ import sys
 #import entorno
 from tetris_funciones import *
 from colores import *
-from tetris_db import *
+from tetris_archivos import *
 
-# obtener directorio
-directorio = armar_directorio_tetris_pygame("prueba_db_puntajes.db")
 # Inicializar Pygame
 pygame.init()
+pygame.mixer.init()
+
 
 # datos de la partida
 modalidad_juego = "CLA"
 
+# obtener directorio_db
+directorio_db = armar_directorio_tetris_pygame("prueba_db_puntajes.db")
 # se crea la DB en caso que no exista
-db_crear(directorio)
+db_crear(directorio_db)
 
 # Configuración de la ventana del programa
 screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
 
-
-
 # datos de configuracion
-dificultad = 2
+dificultad = 3
 limite_movimientos_por_segundo = 4 * dificultad
 ancho_espacio_jugable = 250
 config = config_crear(ancho_espacio_jugable, limite_movimientos_por_segundo, dificultad )
 
-
+# estetica
 matriz_grilla = config.crear_grilla()
 matriz_esquinas = config.crear_puntos()
 
+# player
 figura_jugador = crear_figura(config)
 
 # inicializacion pared de bloques
@@ -43,7 +44,11 @@ pared_juegos = crear_pared(modalidad_juego, config)
 
 
 
-print(f'fondo espacio jugable == {config.espacio_jugable.bottom}')
+# inicializa y reproduce sonido
+media = crear_media()
+media.reproducir(config.dificultad)
+
+
 
 # inicio del cronometro
 config.tiempo.actualiza_cronometro_inicio()
@@ -57,7 +62,11 @@ while running:
     tupla_eventos = leer_evento()
     running = tupla_eventos[0] # se verifica continuidad del bucle
     tecla_pulsada = tupla_eventos[1] # se verifica actividad del teclado
+    click_pulsado = tupla_eventos[2] # se verifica actividad del mouse
 
+
+    # control de sonido via mouse
+    media.controlar(click_pulsado)
 
     # pausa
     if not game_over:
@@ -71,8 +80,9 @@ while running:
         config.tiempo.actualiza_tiempo_transcurrido()
         config.tiempo.actualiza_cronometro_avance()
         
+        # control del jugador via teclado
+        tocar_fondo_manual = controles_juego(config, tecla_pulsada, pared_juegos, figura_jugador)
 
-        tocar_fondo_manual = controles_de_figura(config, tecla_pulsada, pared_juegos, figura_jugador)
 
         # en cada ciclo, el movil debe moverse hacia abajo. la velocidad cambia segun la dificultad
         tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
@@ -103,6 +113,9 @@ while running:
     # fondo ventana
     screen.fill(color_fondo_ventana) # fondo
 
+    # controles de sonido
+    media.dibujar_volumen_barra(screen)
+    media.boton_pausa_play.mostrar(screen)
 
     #dependen del juego en ejecucion:
     config.mensajes_pantalla.mostrar_puntaje(screen)
@@ -110,8 +123,8 @@ while running:
     if game_over:
         config.mensajes_pantalla.mostrar_titulo(screen, "GAME OVER")
         nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un ID entre 3 y 8 caracteres:     ", 100, 400)
-        db_insertar_puntaje(directorio, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
-        mostrar_top_5(directorio)
+        db_insertar_puntaje(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
+        mostrar_top_5(directorio_db)
         break # salir del bucle principal
 
         # print(f'el jugador es: {nombre_player} y su score: {config.mensajes_pantalla.entero_puntaje}')
