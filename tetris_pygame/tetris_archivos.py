@@ -95,7 +95,6 @@ def db_crear(directorio:str):
             c = conn.cursor()
             c.execute('''CREATE TABLE puntajes
                          (puntaje INTEGER, dificultad INTEGER, nombre TEXT)''') # tablas con orden puntaje - dificultad - nombre
-        print("Se creó la DB")
     except sqlite3.Error as e:
         print(f"Error al crear la DB: {e}")
         
@@ -113,7 +112,7 @@ def db_insertar_puntaje(directorio:str, puntaje:int, dificultad:int, nombre:str)
         print(f"Error al insertar puntaje: {e}")
 
 
-def db_obtener_puntajes_ordenados(directorio:str) -> tuple[int, int, str]:
+def db_obtener_puntajes_ordenados(directorio:str) -> list[tuple[int, int, str]]:
     '''
     Abre la DB y retorna una lista de duplas (puntaje, dificultad, nombre) ordenadas descendentemente
     '''

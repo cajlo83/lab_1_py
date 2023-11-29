@@ -600,7 +600,7 @@ def leer_evento() -> tuple[bool, int]:
     '''
     retorno_0 = True
     retorno_1 = None
-    retorno_3 = None
+    retorno_2 = None
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT: # salida de pygame
@@ -608,7 +608,7 @@ def leer_evento() -> tuple[bool, int]:
         elif event.type == pygame.KEYDOWN: # tecla presionada
             retorno_1 = copy.deepcopy(event.key)
         elif event.type == pygame.MOUSEBUTTONDOWN: # click presionado
-            retorno_3 = copy.deepcopy(event.pos)
+            retorno_2 = copy.deepcopy(event.pos)
 
-    return (retorno_0, retorno_1, retorno_3)
+    return (retorno_0, retorno_1, retorno_2)
 
