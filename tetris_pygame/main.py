@@ -28,39 +28,6 @@ screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
 
 
 
-# datos de configuracion
-# dificultad = 3
-# limite_movimientos_por_segundo = 4 * dificultad
-# ancho_espacio_jugable = 250
-# config = config_crear(ancho_espacio_jugable, limite_movimientos_por_segundo, dificultad )
-
-
-
-
-###################### luego de la pantalla de inicio ######################
-# # estetica
-# matriz_grilla = config.crear_grilla()
-# matriz_esquinas = config.crear_puntos()
-
-# # player
-# figura_jugador = crear_figura(config)
-
-# # inicializacion pared de bloques
-# pared_juegos = crear_pared(modalidad_juego, config)
-
-
-# # inicializa y reproduce sonido
-# media = crear_media()
-# media.reproducir(config.dificultad)
-
-# # inicio del cronometro
-# config.tiempo.actualiza_cronometro_inicio()
-
-
-
-
-
-
 ####################### Bucle principal #######################
 running = True
 pausa = False
@@ -71,7 +38,7 @@ while running:
     if menu:
 
         # datos de configuracion
-        config = pantalla_inicio(screen)
+        config = pantalla_inicio(screen, directorio_db)
 
 
         ###################### luego de la pantalla de inicio ######################
@@ -161,9 +128,13 @@ while running:
             config.mensajes_pantalla.mostrar_titulo(screen, "GAME OVER")
             nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un ID entre 3 y 8 caracteres:     ", 100, 400)
             db_insertar_puntaje(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
-            mostrar_top_5(directorio_db)
+            #mostrar_top_5(directorio_db)
+            # Dentro del bucle principal
+            mostrar_top_5(directorio_db, screen)
 
+            pygame.mixer.music.stop()
             menu = True
+            game_over = False
 
             # print(f'el jugador es: {nombre_player} y su score: {config.mensajes_pantalla.entero_puntaje}')
         

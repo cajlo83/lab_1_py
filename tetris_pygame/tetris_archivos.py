@@ -139,15 +139,49 @@ def armar_directorio_tetris_pygame(nombre_archivo:str, directorio_actual:str = N
     return directorio_archivo
 
 
-def mostrar_top_5(directorio):
-    '''
-    recibe el directorio de la DB y muestra el top 5
-    '''
+# def mostrar_top_5(directorio):
+#     '''
+#     recibe el directorio de la DB y muestra el top 5
+#     '''
     
-    lista_puntajes = db_obtener_puntajes_ordenados(directorio)
-    print("\nscore\t\tdificultad\tnombre")
-    for i in range(len(lista_puntajes)):
-        if i >= 5:
-            break
-        print(f'{lista_puntajes[i][0]}\t\t{lista_puntajes[i][1]}\t\t{lista_puntajes[i][2]}')
+#     lista_puntajes = db_obtener_puntajes_ordenados(directorio)
+#     print("\nscore\t\tdificultad\tnombre")
+#     for i in range(len(lista_puntajes)):
+#         if i >= 5:
+#             break
+#         print(f'{lista_puntajes[i][0]}\t\t{lista_puntajes[i][1]}\t\t{lista_puntajes[i][2]}')
         
+
+def mostrar_top_5(directorio, screen):
+    '''
+    Recibe el directorio de la DB y muestra el top 5 en la pantalla.
+    '''
+    lista_puntajes = db_obtener_puntajes_ordenados(directorio)
+    
+    font = pygame.font.Font(None, 36)
+
+   
+
+    # Renderiza los puntajes en la pantalla
+    horizontal_textos = 30
+    altura_textos = 120
+    separacion_textos = 50
+
+     # Renderiza el título en la pantalla
+    titulo_renderizado = font.render("Top 5 Puntajes", True, (255, 255, 255))
+    screen.blit(titulo_renderizado, (horizontal_textos, altura_textos - 2 * separacion_textos))
+
+    # renderizado de las columnas informativas
+    texto = 'score      dificultad      nombre'
+    renderizado = font.render(texto, True, (255, 255, 255))
+    screen.blit(renderizado, (horizontal_textos, altura_textos - 1 * separacion_textos))
+    
+    for i in range(min(len(lista_puntajes), 5)):
+        score, dificultad, nombre = lista_puntajes[i]
+        texto = f'{score}           {dificultad}            {nombre}'
+        renderizado = font.render(texto, True, (255, 255, 255))
+        screen.blit(renderizado, (horizontal_textos, altura_textos + i * separacion_textos))
+
+    pygame.display.flip()
+    pygame.time.delay(5000)
+
