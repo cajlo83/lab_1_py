@@ -107,7 +107,6 @@ def db_insertar_puntaje(directorio:str, puntaje:int, dificultad:int, nombre:str)
         with sqlite3.connect(directorio) as conn:
             c = conn.cursor()
             c.execute("INSERT INTO puntajes VALUES (?, ?, ?)", (puntaje, dificultad, nombre))
-        print("Se insertaron los datos correctamente")
     except sqlite3.Error as e:
         print(f"Error al insertar puntaje: {e}")
 

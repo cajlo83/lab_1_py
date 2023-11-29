@@ -31,7 +31,7 @@ while running:
         media = crear_media()
         media.reproducir(config.dificultad)
         config.tiempo.actualiza_cronometro_inicio()
-        limite_segundos = 10
+        limite_segundos = 100
         menu, pausa, game_over = False, False, False
 
     else:
@@ -55,9 +55,7 @@ while running:
 
             game_over = pared_juegos.agregar_bloques_desde_figura(figura_jugador) 
             
-            if game_over:
-                print("\t\tGAME OVER :C")
-            else:
+            if not game_over:
                 lista_ganadores = pared_juegos.verificar_ganadores()
                 puntaje_subida = pared_juegos.eliminar_filas(lista_ganadores)
                 limite_segundos += puntaje_subida * 3 # se aumenta el limite de tiempo en 3 segundos por cada fila eliminada

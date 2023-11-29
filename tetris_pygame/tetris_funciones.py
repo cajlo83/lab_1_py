@@ -86,9 +86,7 @@ class MensajesPantalla:
         #     texto_salida = self.fuente_texto.render(cadena_informativa , False , color_negro, color_blanco)
         #     screen.blit(texto_salida, ( x, y ) ) 
 
-        if not valida_lista(cadena_informativa, 1, True):
-            print("pedir texto: cadena_informativa esta vacia")
-        else:
+        if valida_lista(cadena_informativa, 1, True):
                 
             text = ""
             # bucle para recibir datos de teclado y mostrar su cambio a medida que se detectan
@@ -523,10 +521,8 @@ def controles_juego(config:Configuracion, tecla_pulsada:int, pared_juegos:Pared,
             retorno = figura_mover("VER", figura_jugador, pared_juegos, config.dimension_bloque)
         
         elif tecla_pulsada == pygame.K_UP: # arr
-            print("tecla arriba inicio")
             if figura_rotar(figura_jugador, pared_juegos):
                 config.tiempo.actualiza_tiempo_anterior() # TIEMPO
-                print("tecla arriba fin")
 
 
 
@@ -589,7 +585,6 @@ def figura_rotar(figura_jugador:Figura, pared_juegos:Pared) -> bool:
 
     # si se detectan choques en la figura entonces se regresa a la version respaldada
     if ( figura_verificar_devolucion("HOR", figura_jugador, pared_juegos) != 0 ) or  ( figura_verificar_devolucion("VER", figura_jugador, pared_juegos) != 0 ):
-        print(f'figura_rotar: se detecto que se paso un limite, se regresa al respaldo')
         figura_jugador.lista_bloques = lista_bloques_original
         figura_jugador.rotacion = rotacion_original
         retorno = False

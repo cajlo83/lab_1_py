@@ -48,8 +48,7 @@ class Bloque:
             self.cuadro.x += cantidad
         elif orientacion == "VER":
             self.cuadro.y += cantidad
-        else:
-            print (f'error en mover_bloque: horientacion ={orientacion}, cantidad = {cantidad}')
+
     
     def choque(self, otro_bloque:Bloque) -> bool:
         '''
@@ -417,7 +416,7 @@ class Pared:
                             self.estructura_pared[x]["bloques_en_fila"][y]["bool_bloque"] = False
 
                         else: # caso de aun no llegar a la altura maxima, toma el valor de las claves "bool_bloque" y "datos_bloque" del bloque siguiente
-                            print(f"eliminar_filas: y = {y}")
+                          
                             self.estructura_pared[x]["bloques_en_fila"][y]["bool_bloque"] = self.estructura_pared[x]["bloques_en_fila"][y+1]["bool_bloque"]
                             self.estructura_pared[x]["bloques_en_fila"][y]["datos_bloque"] = self.estructura_pared[x]["bloques_en_fila"][y+1]["datos_bloque"]
 
@@ -493,8 +492,8 @@ def figura_verificar_devolucion(orientacion: str, figura:Figura, pared:Pared) ->
                     if bloque_pared["bool_bloque"] and bloque_figura.choque(bloque_pared["datos_bloque"]):
                         retorno = bloque_figura.cuadro.y - (bloque_pared["datos_bloque"].cuadro.y - bloque_figura.cuadro.height)
                         
-                        print (f'*********************se detecto un choque:****************')
-                        print(f'altura bloque_figura={bloque_figura.cuadro.y}\taltura bloque_pared={bloque_pared["datos_bloque"].cuadro.y}\tretorno={retorno}')
+                        # print (f'*********************se detecto un choque:****************')
+                        # print(f'altura bloque_figura={bloque_figura.cuadro.y}\taltura bloque_pared={bloque_pared["datos_bloque"].cuadro.y}\tretorno={retorno}')
                     
                         break
                 if retorno:
@@ -502,8 +501,6 @@ def figura_verificar_devolucion(orientacion: str, figura:Figura, pared:Pared) ->
             if retorno:
                 break
 
-    else:
-        print(f'error en figura_verificar_devolucion: orientacion = {orientacion}')
     return retorno
 
 
