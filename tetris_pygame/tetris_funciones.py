@@ -38,8 +38,12 @@ class Tiempos:
     def actualiza_cronometro_inicio(self):
         self.conometro_inicio = pygame.time.get_ticks()
     
-    def actualiza_cronometro_avance(self):
+    def actualiza_cronometro_avance(self) -> int:
+        '''
+        actualiza el cronometro y retorna su valor en milisegundos
+        '''
         self.cronometro_avance = (pygame.time.get_ticks() - self.conometro_inicio) // 1000
+        return self.cronometro_avance
     
     def inicia_pausa(self):
         self.pausa_inicio = pygame.time.get_ticks()
@@ -130,9 +134,9 @@ class MensajesPantalla:
         screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 70 ) ) # centrado a 3/4 de la horizontal, 70 de altura
     
 
-    def mostrar_cronometro(self, screen:pygame.surface.Surface):
+    def mostrar_cronometro(self, screen:pygame.surface.Surface, limite_segundos: int):
        
-        cadena_salida = f'cronometro    {self.tupla_cronometro[0]}:{self.tupla_cronometro[1]}'
+        cadena_salida = f'cronometro    {self.tupla_cronometro[0]}:{self.tupla_cronometro[1]}   /   {limite_segundos//60}:{limite_segundos%60}'
         texto_salida = self.fuente_texto.render(cadena_salida , True, color_texto_gris)
         screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 130 ) ) # centrado a 3/4 de la horizontal, 130 de altura
 
@@ -151,7 +155,7 @@ class Configuracion:
 
   #  def mostrar_mensaje(self, screen, )
 
-    def mostrar_cronometro(self, screen:pygame.surface.Surface):
+    def mostrar_cronometro(self, screen:pygame.surface.Surface, limite_segundos:int):
         '''
         muestra el cronometro 
         '''                
@@ -159,7 +163,7 @@ class Configuracion:
 
 
         self.mensajes_pantalla.tupla_cronometro = tupla
-        self.mensajes_pantalla.mostrar_cronometro(screen)
+        self.mensajes_pantalla.mostrar_cronometro(screen, limite_segundos)
         
 
 
