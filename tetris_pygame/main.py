@@ -49,8 +49,7 @@ while running:
             tocar_fondo_manual = controles_juego(config, tecla_pulsada, pared_juegos, figura_jugador)
             tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
             game_over = (avance_cronometro > limite_segundos)
-            print(avance_cronometro, 1000 * limite_segundos)
-
+            
 
         if (tocar_fondo_manual or tocar_fondo_automatico) and not game_over:
 
