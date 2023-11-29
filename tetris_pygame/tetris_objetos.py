@@ -1,6 +1,4 @@
 from __future__ import annotations
-from typing import ForwardRef, Union
-# from typing import Union
 import pygame
 import random
 from colores import *
