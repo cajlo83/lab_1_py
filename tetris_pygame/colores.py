@@ -16,9 +16,9 @@ color_naranja = (255, 165, 0)
 
 
 #color_facil = (144, 238, 144)  # Verde claro
-color_normal = (192, 192, 192)  # Gris claro
-color_facil = color_gris_oscuro
-color_dificil = (200, 80, 0)  # naranja oscuro
+color_normal =  (160, 160, 160)  
+color_facil = (220, 220, 220)
+color_dificil = (80, 80, 80)
 color_fondo_ventana = (173, 216, 230)  # Azul Claro
 
 color_espacio_seguro = (221, 160, 221)  # Morado claro

@@ -127,6 +127,21 @@ def db_obtener_puntajes_ordenados(directorio:str) -> list[tuple[int, int, str]]:
     
     return retorno
 
+def db_nuevo_top_player(directorio_db:str, puntaje_actual:int, dificultad_actual:int):
+    '''
+    recibe el puntaje actual y verifica si cumple para entrar al top 5
+    retorna true o false
+    '''
+    top_players = db_obtener_puntajes_ordenados(directorio_db)
+    nuevo_top_player = False
+    for top_player in top_players[:5]:
+        if puntaje_actual > top_player[0] or (puntaje_actual == top_player[0] and dificultad_actual > top_player[1]):
+            nuevo_top_player = True
+            break
+
+            
+    return nuevo_top_player
+
 def armar_directorio_tetris_pygame(nombre_archivo:str, directorio_actual:str = None) -> str:
 
 
@@ -179,7 +194,7 @@ def mostrar_top_5(directorio, screen):
     separacion_textos = 50
 
     # renderiza un fondo
-    pygame.draw.rect(screen, (220, 220, 220), (horizontal_textos - 15, altura_textos - (2 * separacion_textos) - 15 , 500, 360))
+    pygame.draw.rect(screen, (220, 220, 220), (horizontal_textos - 15, altura_textos - (2 * separacion_textos) - 15 , 500, 347))
 
      # Renderiza el título en la pantalla
     titulo_renderizado = font.render("Top 5 Puntajes", True, (255, 255, 255))

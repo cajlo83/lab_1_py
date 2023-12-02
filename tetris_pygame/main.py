@@ -32,7 +32,7 @@ while running:
         media.reproducir(config.dificultad)
         config.tiempo.actualiza_cronometro_inicio()
         limite_segundos = 100
-        menu, pausa, game_over = False, False, False
+        menu, pausa, game_over, nuevo_top_player = False, False, False, False
 
     else:
         tupla_eventos = leer_evento()
@@ -66,13 +66,32 @@ while running:
         screen.fill(color_fondo_ventana)
         media.dibujar_volumen_barra(screen)
         media.boton_pausa_play.mostrar(screen)
-
         config.mensajes_pantalla.mostrar_puntaje(screen)
+
         if game_over:
-            config.mensajes_pantalla.mostrar_titulo(screen, "GAME OVER")
-            nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un ID entre 3 y 8 caracteres: ", 100, 400)
-            db_insertar_puntaje(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
-            mostrar_top_5(directorio_db, screen)
+            config.mensajes_pantalla.mostrar_titulo(screen, "¡¡¡¡¡¡¡¡¡¡GAME OVER!!!!!!!!!!")
+            
+            # top_players = db_obtener_puntajes_ordenados(directorio_db)
+            # nuevo_top_player = False
+            # for top_player in top_players[:5]:
+            #     if config.mensajes_pantalla.entero_puntaje > top_players[0]:
+            #         nuevo_top_player = True
+            #         break
+            
+            nuevo_top_player = db_nuevo_top_player(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad)
+
+            if nuevo_top_player:
+                nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un nombre entre 3 y 8 caracteres: ", 100, 400)
+                db_insertar_puntaje(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
+                mostrar_top_5(directorio_db, screen)
+            
+            
+            
+            # en caso de game over y no ser top player se muestra la pantalla por unos segundos para ver resultados finales
+            elif not nuevo_top_player:
+                pygame.display.flip()
+                pygame.time.delay(5000)
+
             pygame.mixer.music.stop()
             menu, game_over = True, False
         else:
@@ -90,7 +109,11 @@ while running:
             mostrar_puntos(matriz_esquinas, screen, 3)
 
         pygame.display.flip()
+        
+
+            
         config.tiempo.limitar_fps()
+
 
 # Salir de Pygame
 pygame.quit()
