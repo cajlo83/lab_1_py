@@ -129,6 +129,18 @@ def db_obtener_puntajes_ordenados(directorio:str) -> list[tuple[int, int, str]]:
 
 def armar_directorio_tetris_pygame(nombre_archivo:str, directorio_actual:str = None) -> str:
 
+
+    # # workspace generico
+    # if directorio_actual is None:
+    #     directorio_trabajo = os.getcwd()
+    #     print(f'armar_directorio_tetris_pygame: {directorio_trabajo}')
+    #     directorio_archivo = os.path.join(directorio_trabajo, nombre_archivo)
+    # else:
+    #     directorio_archivo = os.path.join(directorio_actual, nombre_archivo)
+
+    # return directorio_archivo
+
+    # workspace personalizado
     if directorio_actual is None:
         directorio_trabajo = os.getcwd()
         directorio_archivo = os.path.join(directorio_trabajo, 'lab_1_py', 'tetris_pygame', nombre_archivo)
@@ -163,8 +175,11 @@ def mostrar_top_5(directorio, screen):
 
     # Renderiza los puntajes en la pantalla
     horizontal_textos = 30
-    altura_textos = 120
+    altura_textos = 550
     separacion_textos = 50
+
+    # renderiza un fondo
+    pygame.draw.rect(screen, (220, 220, 220), (horizontal_textos - 15, altura_textos - (2 * separacion_textos) - 15 , 500, 360))
 
      # Renderiza el título en la pantalla
     titulo_renderizado = font.render("Top 5 Puntajes", True, (255, 255, 255))

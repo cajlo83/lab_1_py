@@ -325,6 +325,8 @@ def crear_ventana(ancho:int, alto:int, texto_titulo:str) -> pygame.surface.Surfa
     '''
     ventana = pygame.display.set_mode((ancho, alto))
     pygame.display.set_caption(texto_titulo)
+
+    #ventana = ventana.convert_alpha()
     return ventana
 
 def mostrar_grilla (lista_lineas:list[tuple], screen:pygame.surface.Surface):
