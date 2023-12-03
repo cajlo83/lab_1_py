@@ -9,14 +9,15 @@ import time
 
 
 class Tiempos:
-    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int, conometro_inicio:int, cronometro_avance:int, pausa_inicio:int ):
+    def __init__(self, reloj:pygame.time.Clock, tiempo_entre_movimientos:float, tiempo_actual:float, tiempo_transcurrido:float, tiempo_anterior:float, fps:int, cronometro_inicio:int, cronometro_fin:int, cronometro_avance:int, pausa_inicio:int ):
         self.reloj = reloj #
         self.tiempo_actual = tiempo_actual
         self.tiempo_transcurrido = tiempo_transcurrido
         self.tiempo_anterior = tiempo_anterior #
         self.tiempo_entre_movimientos = tiempo_entre_movimientos
         self.fps = fps #
-        self.conometro_inicio = conometro_inicio
+        self.cronometro_inicio = cronometro_inicio
+        self.cronometro_fin = cronometro_fin
         self.cronometro_avance = cronometro_avance
         self.pausa_inicio = pausa_inicio
 
@@ -29,23 +30,51 @@ class Tiempos:
     def actualiza_tiempo_anterior(self):
         self.tiempo_anterior = self.tiempo_actual
 
-    def actualiza_tiempo_actual(self):
+    def actualiza_tiempo_actual_interacciones(self):
         self.tiempo_actual = time.time()
 
-    def actualiza_tiempo_transcurrido(self):
+    def actualiza_tiempo_transcurrido_interacciones(self):
         self.tiempo_transcurrido = self.tiempo_actual - self.tiempo_anterior
     
-    def actualiza_cronometro_inicio(self):
-        self.conometro_inicio = pygame.time.get_ticks()
+    def actualiza_cronometro_inicio(self, tiempo_sumado:int = None):
+        '''
+        tiempo_sumado: milisegundos
+        '''
+        if tiempo_sumado:
+            self.cronometro_inicio += tiempo_sumado
+        else:
+            self.cronometro_inicio = pygame.time.get_ticks()
+
+    def actualiza_cronometro_fin(self, tiempo_sumado:int = None):
+        '''
+        tiempo_sumado: milisegundos
+        '''
+        if tiempo_sumado is None:
+            self.cronometro_fin = pygame.time.get_ticks() + (1000 * 60)
+        else:
+            self.cronometro_fin += tiempo_sumado
     
     def actualiza_cronometro_avance(self) -> int:
         '''
         actualiza el cronometro y retorna su valor en milisegundos
         '''
-        self.cronometro_avance = (pygame.time.get_ticks() - self.conometro_inicio) // 1000
+        self.cronometro_avance = (pygame.time.get_ticks() - self.cronometro_inicio) 
         return self.cronometro_avance
     
+    def avanzar_cronometro(self) -> bool:
+        '''
+        se encarga del avance del cronometro durante la partida
+        el retorno informa un game_over por tiempo
+        '''
+
+        avance_cronometro = self.actualiza_cronometro_avance()
+        game_over = ( avance_cronometro >= (self.cronometro_fin - self.cronometro_inicio) )
+        return game_over
+    
     def inicia_pausa(self):
+        '''
+        guarda la hora en que se hace la pausa para que no afecte al cronometro en partida
+        '''
         self.pausa_inicio = pygame.time.get_ticks()
 
     def termina_pausa(self) -> int:
@@ -55,8 +84,28 @@ class Tiempos:
 
         hora_actual = pygame.time.get_ticks()
         tiempo_transcurrido = hora_actual - self.pausa_inicio
-        self.conometro_inicio += tiempo_transcurrido
+        self.actualiza_cronometro_inicio(tiempo_transcurrido)
+        self.actualiza_cronometro_fin(tiempo_transcurrido)
         
+        
+def tiempo_crear(limite_movimientos_por_segundo:int, fps:int) -> Tiempos:
+    '''
+    crea el contenido inicial para los datos de tiempo
+    '''
+
+    tiempo_actual = time.time() #
+    tiempo_anterior = time.time() #
+    tiempo_entre_movimientos = 1 / limite_movimientos_por_segundo #
+    tiempo_transcurrido = tiempo_actual - tiempo_anterior
+    reloj = pygame.time.Clock() #
+    cronometro_inicio = 0
+    cronometro_fin = 0
+    
+
+    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps, cronometro_inicio, cronometro_fin, 0, 0)
+    
+    return tiempo_retorno
+
 
 class MensajesPantalla:
     def __init__(self,fuente_texto:pygame.font.Font, texto_titulo:str, entero_puntaje:int, tupla_cronometro:tuple[int,int] ) -> None:
@@ -132,9 +181,9 @@ class MensajesPantalla:
         screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 70 ) ) # centrado a 3/4 de la horizontal, 70 de altura
     
 
-    def mostrar_cronometro(self, screen:pygame.surface.Surface, limite_segundos: int):
+    def mostrar_cronometro(self, screen:pygame.surface.Surface):
        
-        cadena_salida = f'cronometro    {self.tupla_cronometro[0]}:{self.tupla_cronometro[1]}   /   {limite_segundos//60}:{limite_segundos%60}'
+        cadena_salida = f'tiempo restante:    {self.tupla_cronometro[0]}:{self.tupla_cronometro[1]}'
         texto_salida = self.fuente_texto.render(cadena_salida , True, color_texto_gris)
         screen.blit(texto_salida, ( 3 * (screen.get_width() // 4) - texto_salida.get_width() // 2, 130 ) ) # centrado a 3/4 de la horizontal, 130 de altura
 
@@ -153,15 +202,19 @@ class Configuracion:
 
   #  def mostrar_mensaje(self, screen, )
 
-    def mostrar_cronometro(self, screen:pygame.surface.Surface, limite_segundos:int):
+    def mostrar_cronometro(self, screen:pygame.surface.Surface):
         '''
         muestra el cronometro 
-        '''                
-        tupla = ( int(self.tiempo.cronometro_avance / 60), self.tiempo.cronometro_avance % 60 )
+        '''        
+        milisegundos_total = self.tiempo.cronometro_fin - self.tiempo.cronometro_inicio
+        milisegundos_restantes = milisegundos_total - self.tiempo.cronometro_avance
+        segundos_restantes = milisegundos_restantes // 1000
+
+        tupla = ( (segundos_restantes // 60), (segundos_restantes % 60) )
 
 
         self.mensajes_pantalla.tupla_cronometro = tupla
-        self.mensajes_pantalla.mostrar_cronometro(screen, limite_segundos)
+        self.mensajes_pantalla.mostrar_cronometro(screen)
         
 
 
@@ -256,23 +309,6 @@ def mensajes_pantalla_crear() -> MensajesPantalla:
 
     retorno = MensajesPantalla(fuente_texto, texto_titulo, entero_puntaje, tupla_tiempo)
     return retorno
-        
-def tiempo_crear(limite_movimientos_por_segundo:int, fps:int) -> Tiempos:
-    '''
-    crea el contenido inicial para los datos de tiempo
-    '''
-
-    tiempo_actual = time.time() #
-    tiempo_anterior = time.time() #
-    tiempo_entre_movimientos = 1 / limite_movimientos_por_segundo #
-    tiempo_transcurrido = tiempo_actual - tiempo_anterior
-    reloj = pygame.time.Clock() #
-    cronometro = 0
-    
-
-    tiempo_retorno = Tiempos(reloj, tiempo_entre_movimientos, tiempo_actual, tiempo_transcurrido, tiempo_anterior, fps, cronometro, cronometro, cronometro)
-    
-    return tiempo_retorno
 
 def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, dificultad:int ) -> Configuracion:
     '''

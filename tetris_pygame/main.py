@@ -20,6 +20,8 @@ screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
 # Bucle principal
 running, menu = True, True
 
+segundos_subida = 1000 * 5 # aumento de tiempo al sumar puntos
+
 while running:
     if menu:
         config = pantalla_inicio(screen, directorio_db)
@@ -31,7 +33,7 @@ while running:
         media = crear_media()
         media.reproducir(config.dificultad)
         config.tiempo.actualiza_cronometro_inicio()
-        limite_segundos = 100
+        config.tiempo.actualiza_cronometro_fin()
         menu, pausa, game_over, nuevo_top_player = False, False, False, False
 
     else:
@@ -43,12 +45,11 @@ while running:
             pausa = config.estado_pausa(pausa, tecla_pulsada)
 
         if not pausa:
-            config.tiempo.actualiza_tiempo_actual()
-            config.tiempo.actualiza_tiempo_transcurrido()
-            avance_cronometro = config.tiempo.actualiza_cronometro_avance()
+            config.tiempo.actualiza_tiempo_actual_interacciones()
+            config.tiempo.actualiza_tiempo_transcurrido_interacciones()
             tocar_fondo_manual = controles_juego(config, tecla_pulsada, pared_juegos, figura_jugador)
             tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
-            game_over = (avance_cronometro > limite_segundos)
+            game_over = config.tiempo.avanzar_cronometro()
             
 
         if (tocar_fondo_manual or tocar_fondo_automatico) and not game_over:
@@ -58,7 +59,7 @@ while running:
             if not game_over:
                 lista_ganadores = pared_juegos.verificar_ganadores()
                 puntaje_subida = pared_juegos.eliminar_filas(lista_ganadores)
-                limite_segundos += puntaje_subida * 3 # se aumenta el limite de tiempo en 3 segundos por cada fila eliminada
+                config.tiempo.actualiza_cronometro_fin( puntaje_subida * segundos_subida ) # se aumenta el limite de tiempo segun cada fila eliminada
                 config.subir_puntuacion(puntaje_subida)
                 figura_jugador = crear_figura(config)
 
@@ -83,12 +84,8 @@ while running:
             if nuevo_top_player:
                 nombre_player = config.mensajes_pantalla.pedir_texto(screen, "ingrese un nombre entre 3 y 8 caracteres: ", 100, 400)
                 db_insertar_puntaje(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad, nombre_player)
-                mostrar_top_5(directorio_db, screen)
-            
-            
-            
-            # en caso de game over y no ser top player se muestra la pantalla por unos segundos para ver resultados finales
-            elif not nuevo_top_player:
+                mostrar_top_5(directorio_db, screen)                        
+            else: # en caso de game over y no ser top player se muestra la pantalla por unos segundos para ver score final
                 pygame.display.flip()
                 pygame.time.delay(5000)
 
@@ -99,7 +96,7 @@ while running:
             config.espacio_jugable.mostrar(screen)
             if not pausa:
                 config.mensajes_pantalla.mostrar_titulo(screen)
-                config.mostrar_cronometro(screen, limite_segundos)
+                config.mostrar_cronometro(screen)
                 figura_jugador.mostrar(screen)
                 pared_juegos.mostrar(screen)
             else:
