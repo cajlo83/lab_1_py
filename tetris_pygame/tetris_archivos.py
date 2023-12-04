@@ -1,9 +1,13 @@
 import sqlite3
+
 import os
+
 import pygame
 
+from mi_pygame import *
 
-class Boton:
+
+class BotonImagen:
     def __init__(self, imagen:pygame.surface.Surface, cuadro:pygame.rect.Rect) -> None: 
         self.imagen = imagen
         self.cuadro = cuadro
@@ -14,7 +18,7 @@ class Boton:
 
 
 class Media:
-    def __init__(self, pista_facil, pista_normal, pista_dificil, boton_pausa_play:Boton, volumen_actual, volumen_barra:pygame.rect.Rect, pausa_sonido):
+    def __init__(self, pista_facil, pista_normal, pista_dificil, boton_pausa_play:BotonImagen, volumen_actual, volumen_barra:pygame.rect.Rect, pausa_sonido):
         self.pista_facil = pista_facil
         self.pista_normal = pista_normal
         self.pista_dificil = pista_dificil
@@ -28,7 +32,7 @@ class Media:
             pygame.mixer.music.load(self.pista_facil)
         if dificultad == 2:
             pygame.mixer.music.load(self.pista_normal)
-        if dificultad == 3:
+        if dificultad >= 3:
             pygame.mixer.music.load(self.pista_dificil)
 
         pygame.mixer.music.set_volume(self.volumen_actual)
@@ -42,7 +46,7 @@ class Media:
         pygame.draw.rect(screen, (0, 128, 0), (self.volumen_barra.x, self.volumen_barra.y, self.volumen_actual * self.volumen_barra.width, self.volumen_barra.height))
 
     def controlar(self, evento_pos): #
-        if evento_pos is not None:
+        if evento_pos is not (0, 0):
             if self.volumen_barra.collidepoint(evento_pos):
                 # Ajusta el volumen de acuerdo a la posición del ratón en la barra
                 self.volumen_actual = max(0.0, min(1.0, (evento_pos[0] - self.volumen_barra.x) / self.volumen_barra.width))
@@ -55,9 +59,22 @@ class Media:
                 else:
                     pygame.mixer.music.unpause()
 
+    def mostrar_panel_audio(self, screen:pygame.surface.Surface, color_bandeja:tuple[int,int,int]):
+        
+        fonter = pygame.font.Font(None, 36)
+        fonter_size = fonter.get_height()
 
+        # bandeja de sonido
+        pygame.draw.rect(screen, color_bandeja, (self.volumen_barra.left - 10 , self.boton_pausa_play.cuadro.top - 20 - fonter_size, (self.volumen_barra.width + 20 ), ( self.volumen_barra.bottom - self.boton_pausa_play.cuadro.top + 30 + fonter_size)))
+        mostrar_texto(screen, "Sonido:", self.volumen_barra.left, self.boton_pausa_play.cuadro.top - 10 - fonter_size, fonter, color_blanco)
+        
+        self.dibujar_volumen_barra(screen)
+        self.boton_pausa_play.mostrar(screen)
 
 def crear_media() -> Media: #
+    '''
+    inicializa la configuracion para reproducir los archivos de sonido
+    '''
     directorio_multimedia = armar_directorio_tetris_pygame("media")
 
     # pista audio facil
@@ -72,7 +89,7 @@ def crear_media() -> Media: #
     cuadro_pausa_play = imagen_pausa_play.get_rect()
     cuadro_pausa_play.x = 500
     cuadro_pausa_play.y = 500
-    boton_pausa_play = Boton(imagen_pausa_play, cuadro_pausa_play)
+    boton_pausa_play = BotonImagen(imagen_pausa_play, cuadro_pausa_play)
     # volumen_actual
     volumen_actual = 0.3
     # barra control de volumen
@@ -143,7 +160,11 @@ def db_nuevo_top_player(directorio_db:str, puntaje_actual:int, dificultad_actual
     return nuevo_top_player
 
 def armar_directorio_tetris_pygame(nombre_archivo:str, directorio_actual:str = None) -> str:
+    '''
+    crea el directorio para el workspace correspondiente.
 
+    para otras pcs intercambiar las lineas comentadas
+    '''
 
     # # workspace generico
     # if directorio_actual is None:
@@ -164,19 +185,6 @@ def armar_directorio_tetris_pygame(nombre_archivo:str, directorio_actual:str = N
 
     return directorio_archivo
 
-
-# def mostrar_top_5(directorio):
-#     '''
-#     recibe el directorio de la DB y muestra el top 5
-#     '''
-    
-#     lista_puntajes = db_obtener_puntajes_ordenados(directorio)
-#     print("\nscore\t\tdificultad\tnombre")
-#     for i in range(len(lista_puntajes)):
-#         if i >= 5:
-#             break
-#         print(f'{lista_puntajes[i][0]}\t\t{lista_puntajes[i][1]}\t\t{lista_puntajes[i][2]}')
-        
 
 def mostrar_top_5(directorio, screen):
     '''

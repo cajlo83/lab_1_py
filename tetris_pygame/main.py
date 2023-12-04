@@ -24,6 +24,7 @@ segundos_subida = 1000 * 5 # aumento de tiempo al sumar puntos
 
 while running:
     if menu:
+        ####################### menu inicial
         config = pantalla_inicio(screen, directorio_db)
 
         # Luego de la pantalla de inicio
@@ -37,9 +38,9 @@ while running:
         menu, pausa, game_over, nuevo_top_player = False, False, False, False
 
     else:
-        tupla_eventos = leer_evento()
-        running, tecla_pulsada, click_pulsado = tupla_eventos
 
+        ############################### Juego
+        running, tecla_pulsada, click_pulsado = leer_evento()
         media.controlar(click_pulsado)
         if not game_over:
             pausa = config.estado_pausa(pausa, tecla_pulsada)
@@ -48,12 +49,16 @@ while running:
             config.tiempo.actualiza_tiempo_actual_interacciones()
             config.tiempo.actualiza_tiempo_transcurrido_interacciones()
             tocar_fondo_manual = controles_juego(config, tecla_pulsada, pared_juegos, figura_jugador)
-            tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
+            if config.dificultad == 4: # sube la velocidad a cada minuto
+                velocidad_bajada =  ((pygame.time.get_ticks() - config.tiempo.cronometro_inicio) // (60000)) + 1 # milisegundos / (1000 * 60) = minutos
+                tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, velocidad_bajada)
+
+            else:
+                tocar_fondo_automatico = figura_mover("VER", figura_jugador, pared_juegos, config.dificultad)
             game_over = config.tiempo.avanzar_cronometro()
             
 
         if (tocar_fondo_manual or tocar_fondo_automatico) and not game_over:
-
             game_over = pared_juegos.agregar_bloques_desde_figura(figura_jugador) 
             
             if not game_over:
@@ -63,22 +68,17 @@ while running:
                 config.subir_puntuacion(puntaje_subida)
                 figura_jugador = crear_figura(config)
 
-        # Dibujar la pantalla
+
+
+
+
+
+        ############################# Dibujos en pantalla
         screen.fill(color_fondo_ventana)
-        media.dibujar_volumen_barra(screen)
-        media.boton_pausa_play.mostrar(screen)
         config.mensajes_pantalla.mostrar_puntaje(screen)
 
         if game_over:
             config.mensajes_pantalla.mostrar_titulo(screen, "¡¡¡¡¡¡¡¡¡¡GAME OVER!!!!!!!!!!")
-            
-            # top_players = db_obtener_puntajes_ordenados(directorio_db)
-            # nuevo_top_player = False
-            # for top_player in top_players[:5]:
-            #     if config.mensajes_pantalla.entero_puntaje > top_players[0]:
-            #         nuevo_top_player = True
-            #         break
-            
             nuevo_top_player = db_nuevo_top_player(directorio_db, config.mensajes_pantalla.entero_puntaje, config.dificultad)
 
             if nuevo_top_player:
@@ -92,6 +92,8 @@ while running:
             pygame.mixer.music.stop()
             menu, game_over = True, False
         else:
+            
+            media.mostrar_panel_audio(screen, color_sonido)
             config.espacio_seguro.mostrar(screen)
             config.espacio_jugable.mostrar(screen)
             if not pausa:

@@ -327,6 +327,9 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
 
     elif dificultad == 3:
         espacio_jugable_color = color_dificil
+    
+    elif dificultad == 4:
+        espacio_jugable_color = color_progresivo
     espacio_jugable = Bloque(espacio_jugable_color, espacio_jugable_cuadro)
 
      
@@ -353,34 +356,6 @@ def config_crear(ancho_espacio_jugable:int, limite_movimientos_por_segundo:int, 
     retorno = Configuracion(tiempos, mensajes_pantalla, dificultad, espacio_jugable, espacio_seguro, dimension_bloque, x_jugador, y_jugador)
     return retorno
 
-def crear_ventana(ancho:int, alto:int, texto_titulo:str) -> pygame.surface.Surface:
-    '''
-    Recibe: el alto, el ancho y el texto del titulo de la ventana
-    Operacion: crea la ventana del programa con el tamaño y el titulo especificados
-    Retorna: el objeto surface que representra a la ventana
-    '''
-    ventana = pygame.display.set_mode((ancho, alto))
-    pygame.display.set_caption(texto_titulo)
-
-    #ventana = ventana.convert_alpha()
-    return ventana
-
-def mostrar_grilla (lista_lineas:list[tuple], screen:pygame.surface.Surface):
-
-    if valida_lista(lista_lineas):
-        for linea in lista_lineas:
-            pygame.draw.line(screen, color_negro, linea[0], linea[1])
-         
-def mostrar_puntos(matriz_puntos:list[list[tuple]], screen:pygame.surface.Surface, radio: int):
-    
-    
-    if valida_lista(matriz_puntos):
-        for fila in matriz_puntos:
-            if valida_lista(fila):
-                for punto in fila:
-                    pygame.draw.circle(screen, color_negro, punto, radio)
-            else:
-                break
 
 def crear_figura(config: Configuracion) -> Figura:
     '''
@@ -628,24 +603,3 @@ def figura_rotar(figura_jugador:Figura, pared_juegos:Pared) -> bool:
         retorno = False
 
     return retorno
-
-def leer_evento() -> tuple[bool, int]:
-    '''
-    lee posible evento de cierre del bucle y de tecla presionada.
-    retorna valores por defecto en caso de no detectarse eventos.
-    retorno = (running, tecla_pulsada)
-    '''
-    retorno_0 = True
-    retorno_1 = None
-    retorno_2 = None
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: # salida de pygame
-            retorno_0 = False
-        elif event.type == pygame.KEYDOWN: # tecla presionada
-            retorno_1 = copy.deepcopy(event.key)
-        elif event.type == pygame.MOUSEBUTTONDOWN: # click presionado
-            retorno_2 = copy.deepcopy(event.pos)
-
-    return (retorno_0, retorno_1, retorno_2)
-

@@ -16,8 +16,10 @@ color_naranja = (255, 165, 0)
 
 
 color_facil = (240, 240, 240)
-color_normal =  (160, 160, 160)
-color_dificil = (80, 80, 80)
+color_normal =  (180, 180, 180)
+color_dificil = (120, 120, 120)
+color_progresivo = (60, 60, 60)
+
 color_fondo_ventana = (173, 216, 230)  # Azul Claro
 
 color_espacio_seguro = (221, 160, 221)  # Morado claro
@@ -27,3 +29,5 @@ color_texto_azul = (0, 0, 128)  # Azul oscuro
 
 
 color_jugar = color_azul
+
+color_sonido = (24, 38, 72)
