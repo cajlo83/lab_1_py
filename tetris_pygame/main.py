@@ -20,7 +20,7 @@ screen = crear_ventana(800, 800, "tetris pygame Carlo Morici")
 # Bucle principal
 running, menu = True, True
 
-segundos_subida = 1000 * 5 # aumento de tiempo al sumar puntos
+segundos_subida = 1000 * 15 # aumento de tiempo al sumar puntos
 
 while running:
     if menu:
@@ -65,6 +65,7 @@ while running:
                 lista_ganadores = pared_juegos.verificar_ganadores()
                 puntaje_subida = pared_juegos.eliminar_filas(lista_ganadores)
                 config.tiempo.actualiza_cronometro_fin( puntaje_subida * segundos_subida ) # se aumenta el limite de tiempo segun cada fila eliminada
+                print(f'puntaje_subida = {puntaje_subida}       lista_ganadores = {lista_ganadores}')
                 config.subir_puntuacion(puntaje_subida)
                 figura_jugador = crear_figura(config)
 
