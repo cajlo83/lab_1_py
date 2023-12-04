@@ -13,10 +13,13 @@ import sys
 
 
 # Función para mostrar texto en la pantalla
-def mostrar_texto(screen, texto, x, y, font, color):
+def mostrar_texto(screen:pygame.surface.Surface, texto:str, x:int, y:int, font:pygame.font.Font, color:tuple[int,int,int]) -> pygame.rect.Rect:
+    '''
+    muestra un texto y retorna un rectangulo con datos de ancho y alto que ocupa en la pantalla
+    '''
     texto_renderizado = font.render(texto, True, color)
     screen.blit(texto_renderizado, (x, y))
-
+    return texto_renderizado.get_rect()
 
 
 def cargar_fondo( dimensiones):
@@ -37,6 +40,31 @@ def cargar_fondo( dimensiones):
         return None
 
 
+class Boton:
+    def __init__(self, fuente:pygame.font.Font, texto:str, x_texto:int, y_texto:int, color_texto:tuple[int, int, int], color_cuadrado:tuple[int, int, int] ) -> None:
+        self.fuente = fuente
+        self.texto = texto
+        self.x_texto = x_texto
+        self.y_texto = y_texto
+        self.color_texto = color_texto
+        self.color_cuadrado = color_cuadrado
+
+    def mostrar(self,screen:pygame.surface.Surface) -> pygame.rect.Rect:
+
+        # se renderiza texto para extraer el valor de su rectangulo y crear un rectangulo mas grande a su alrededor
+        texto_renderizado = self.fuente.render(self.texto, True, self.color_texto)
+        cuadrado_texto = texto_renderizado.get_rect()
+        rectangulo_boton = pygame.rect.Rect( (self.x_texto - 5), (self.y_texto - 5), cuadrado_texto.width + 10, cuadrado_texto.height + 10 )
+
+        # se dibujan el cuadrado y el texto
+        pygame.draw.rect(screen, self.color_cuadrado, rectangulo_boton )
+        screen.blit(texto_renderizado, (self.x_texto, self.y_texto))
+        
+        # se retorna el cuadrado del boton
+        return rectangulo_boton
+
+
+ 
 
 
 
@@ -59,36 +87,41 @@ def pantalla_inicio(screen:pygame.surface.Surface, directorio_db:str) -> Configu
     font = pygame.font.Font(None, 36)
     fonter = pygame.font.Font(None, 60)
 
-    pos_x = 380
-    largo_x = 140
-    pos_salir = (700, 700, 80, 50)  # Coordenadas y dimensiones del botón "Salir"
 
+
+    pos_x = 380
+  
+
+    boton_facil = Boton(font, "Facil", pos_x, 160, color_texto_azul, color_amarillo )
+    boton_normal = Boton(font, "Normal", pos_x, 260, color_texto_azul, color_amarillo )
+    boton_dificil = Boton(font, "Dificil", pos_x, 360, color_texto_azul, color_amarillo )
+    boton_ranking = Boton(font, "Ranking", pos_x - 200 , 550, color_texto_gris, color_verde )
+    boton_salir = Boton(font, "Salir", 700, 700, color_texto_gris, color_morado )
 
     
     continuar = True
+    redibujar = True
     while continuar:
          
-        screen.blit(fondo, (0, 0))
 
-        # Dibujar botones
-        pygame.draw.rect(screen, color_jugar, (pos_x - 160, 140, largo_x + 170, 270))
-        pygame.draw.rect(screen, color_blanco, (pos_x, 150, largo_x, 50))
-        pygame.draw.rect(screen, color_blanco, (pos_x, 250, largo_x, 50))
-        pygame.draw.rect(screen, color_blanco, (pos_x, 350, largo_x, 50))
-        pygame.draw.rect(screen, color_blanco, (pos_x + 170, 300, 170, 50))
-        pygame.draw.rect(screen, color_blanco, pos_salir)  # Dibujar botón "Salir"
+        
+        if redibujar:
+                
+            screen.blit(fondo, (0, 0))
 
+            # bandeja de jugar
+            pygame.draw.rect(screen, color_jugar, (pos_x - 160, 140, 300, 270))
+            mostrar_texto(screen, "Jugar:", pos_x - 150, 245, fonter, color_texto_gris)
 
+            # mostrar botones
+            cuadrado_facil = boton_facil.mostrar(screen)
+            cuadrado_normal = boton_normal.mostrar(screen)
+            cuadrado_dificil = boton_dificil.mostrar(screen)
+            cuadrado_ranking = boton_ranking.mostrar(screen)
+            cuadrado_salir = boton_salir.mostrar(screen)
 
-        # Mostrar texto en botones y titulo
-        mostrar_texto(screen, "Jugar:", pos_x - 150, 245, fonter, color_texto_gris)
-        mostrar_texto(screen, "Fácil", pos_x + 10, 160, font, color_texto_gris)
-        mostrar_texto(screen, "Normal", pos_x + 10, 260, font, color_texto_gris)
-        mostrar_texto(screen, "Difícil", pos_x + 10, 360, font, color_texto_gris)
-        mostrar_texto(screen, "Ranking", pos_x + 200, 310, font, color_texto_gris)
-        mostrar_texto(screen, "Salir", pos_salir[0] + 10, pos_salir[1] + 10, font, color_texto_gris)
-
-        pygame.display.flip()
+            pygame.display.flip()
+            redibujar = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -96,24 +129,24 @@ def pantalla_inicio(screen:pygame.surface.Surface, directorio_db:str) -> Configu
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
-                if pos_x <= x <= (pos_x + largo_x):
-                    if 150 <= y <= 200:
-                        dificultad = 1
-                        continuar = False
-                    elif 250 <= y <= 300:
-                        dificultad = 2
-                        continuar = False
-                    elif 350 <= y <= 400:
-                        dificultad = 3
-                        continuar = False
-                    elif 450 <= y <= 500:
-                        mostrar_top_5(directorio_db, screen)
-                elif (pos_x + 170) <= x <= (pos_x + 170 + 170) and 300 <= y <= (300 + 50):
+                print(f'coordenadas raton : ({x},{y})')
+                if cuadrado_facil.left <= x <= cuadrado_facil.right and cuadrado_facil.top <= y <= cuadrado_facil.bottom:
+                    dificultad = 1
+                    continuar = False
+                elif cuadrado_normal.left <= x <= cuadrado_normal.right and cuadrado_normal.top <= y <= cuadrado_normal.bottom:
+                    dificultad = 2
+                    continuar = False
+                elif cuadrado_dificil.left <= x <= cuadrado_dificil.right and cuadrado_dificil.top <= y <= cuadrado_dificil.bottom:
+                    dificultad = 3
+                    continuar = False
+                elif cuadrado_ranking.left <= x <= cuadrado_ranking.right and cuadrado_ranking.top <= y <= cuadrado_ranking.bottom:
                     mostrar_top_5(directorio_db, screen)
-
-                elif pos_salir[0] <= x <= (pos_salir[0] + pos_salir[2]) and pos_salir[1] <= y <= (pos_salir[1] + pos_salir[3]):
+                    redibujar = True
+                elif cuadrado_salir.left <= x <= cuadrado_salir.right and cuadrado_salir.top <= y <= cuadrado_salir.bottom:
                     pygame.quit()
                     sys.exit()
+
+                #     sys.exit()
 
     limite_movimientos_por_segundo = 4 * dificultad
     ancho_espacio_jugable = 250

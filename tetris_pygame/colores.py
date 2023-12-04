@@ -4,7 +4,7 @@ color_morado = (255, 0, 255)
 color_gris_oscuro = (50, 50, 50)
 color_gris = (150, 150, 150)
 
-color_jugar = ((255, 255, 0))
+
 
 color_negro = (0, 0, 0)
 
@@ -24,3 +24,6 @@ color_espacio_seguro = (221, 160, 221)  # Morado claro
 
 color_texto_gris = (47, 79, 79)  # Gris oscuro
 color_texto_azul = (0, 0, 128)  # Azul oscuro
+
+
+color_jugar = color_azul
