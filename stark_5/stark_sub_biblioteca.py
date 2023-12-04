@@ -108,8 +108,35 @@ def lista_diccionarios_contar_coincidencias(lista_diccionarios:list[dict],clave_
             valor_lista = diccionario[clave_lista] # guardo el string no vacio que pasara a ser una clave del diccionario de contadores a crear
             clave_diccionario = capitalizar_palabras(valor_lista)
 
+            # verifico si el elemento clave_diccionario pertenece a diccionario_final. suma 1 a un contador si existe, inicializa otro contador en 1 si no existe
+            if clave_diccionario in diccionario_final:
+                diccionario_final[clave_diccionario] += 1
+            else:
+                diccionario_final[clave_diccionario] = 1
+
+    # retorno el diccionario con resultados
+    return diccionario_final
+
+
+
+
+
+
+def lista_diccionarios_contar_coincidencias_inclusivo(lista_diccionarios:list[dict], clave_lista:str)->dict:
+    '''
+    verifica los elementos en lista_diccionarios para ver cuantos tipos de clave_lista hay y contar sus repeticiones.
+    Retorna: un diccionario de contadores con los distintos valores en la clave buscada y sus repeticiones.
+    '''
+
+    diccionario_final ={}
+    #bucle para recorrer la lista, diccionario por diccionario
+    for diccionario in lista_diccionarios:
+        if valida_lista(diccionario[clave_lista], de_caracteres=True): # verifica que el valor de la clave en evaluacion sea un string no vacio
+            valor_lista = diccionario[clave_lista] # guardo el string no vacio que pasara a ser una clave del diccionario de contadores a crear
+            clave_diccionario = capitalizar_palabras(valor_lista)
+
         else: # como alternativa se configura como "NO DATA" en caso de recibirse un dato vacio para contarlos con una palabra "no vacia"
-            clave_diccionario ="No Data" 
+            clave_diccionario ="No Tiene" 
 
         # verifico si el elemento clave_diccionario pertenece a diccionario_final. suma 1 a un contador si existe, inicializa otro contador en 1 si no existe
         if clave_diccionario in diccionario_final:

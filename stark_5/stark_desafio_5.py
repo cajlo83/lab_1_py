@@ -41,10 +41,10 @@ def imprimir_menu_desafio_5():
 
 
 
-def stark_menu_principal_desafio_5():
+def stark_menu_principal_desafio_5() -> Union[str, int]:
     '''
     Genera la interaccion entre el usuario y la maquina a travez del menu
-    valida con regex que la entrada sea correcta
+    valida con regex se introduzca una opcion correcta y lo retorna en mayusculas
     '''
 
     imprimir_menu_desafio_5()
@@ -53,15 +53,12 @@ def stark_menu_principal_desafio_5():
     # re.match() retorna None que puede ser interpretado como False o un objeto match que peude ser interpretado como True
     if re.match(r'^[a-oA-OzZ]$', entrada.strip()): # se eliminan caracteres ' ' para facilitar interaccion
 
-        return entrada.upper() # se retorna en mayusculas
+        retorno = entrada.upper() # se retorna en mayusculas
     else:
-        return -1
+        retorno = -1
+
+    return retorno
         
-
-
-
-
-
 
 def stark_marvel_app_5(lista_heroes:list[dict]):
     '''
@@ -145,7 +142,7 @@ def stark_marvel_app_5(lista_heroes:list[dict]):
 # L. Determinar cuántos superhéroes tienen cada tipo de inteligencia (En caso de no tener, Inicializarlo con ‘No Tiene’).
             case 'L':
                 print("*** opcion L ***")
-                if not stark_calcular_cantidad_por_tipo(lista_heroes,'inteligencia'):
+                if not stark_calcular_cantidad_por_tipo_inclusivo(lista_heroes,'inteligencia'):
                     print("error en opcion L")
 
 # M. Listar todos los superhéroes agrupados por color de ojos.
@@ -191,8 +188,6 @@ def leer_archivo (nombre_archivo:str) -> list[dict]:
 
 
 
-
-
 def guardar_archivo (nombre_archivo:str, contenido:str) -> bool:
     '''
     Recibe: el nombre/la direccion con el cual se guardará el archivo junto con su extensión (ejemplo: 'archivo.csv').
@@ -205,10 +200,12 @@ def guardar_archivo (nombre_archivo:str, contenido:str) -> bool:
         with open(directorio_archivo, 'w+') as archivo:
             archivo.write(contenido)
             print(f"se creo el archivo: {nombre_archivo}")
-            return True
+            retorno = True
     except Exception:
         print(f"‘Error al crear el archivo: {nombre_archivo}")
-        return False
+        retorno = False
+
+    return retorno 
 
 '''
 
@@ -327,26 +324,28 @@ def calcular_max_genero(lista_diccionarios:list[dict], clave_numerica:str, gener
 
     #si la lista recibida esta vacia, retorna False
     if not valida_lista(lista_diccionarios):
-        return False
+        retorno = False
+    else:
+        bandera_primera = True
+        diccionario_retorno = {}
+        for diccionario in lista_diccionarios:
 
-    bandera_primera = True
-    diccionario_retorno = {}
-    for diccionario in lista_diccionarios:
+            #se verifica que diccionario['genero'] == genero_buscado y que diccionario[clave_numerica] represente a un numero
+            if diccionario['genero'] == genero_buscado and (verificar_numero_flotante(diccionario[clave_numerica]) or verificar_numero_entero(diccionario[clave_numerica])): 
 
-        #se verifica que diccionario['genero'] == genero_buscado y que diccionario[clave_numerica] represente a un numero
-        if diccionario['genero'] == genero_buscado and (verificar_numero_flotante(diccionario[clave_numerica]) or verificar_numero_entero(diccionario[clave_numerica])): 
+                numero_actual = float(diccionario[clave_numerica]) # en caso de ser el nuevo mayor, se castea solo una vez
+                if (bandera_primera): #primera comparacion de valores numericos con una bandera
+                    bandera_primera = False
+                    numero_mayor = numero_actual 
+                    diccionario_retorno = diccionario
 
-            numero_actual = float(diccionario[clave_numerica]) # en caso de ser el nuevo mayor, se castea solo una vez
-            if (bandera_primera): #primera comparacion de valores numericos con una bandera
-                bandera_primera = False
-                numero_mayor = numero_actual 
-                diccionario_retorno = diccionario
+                elif (numero_mayor < numero_actual):
+                    numero_mayor = numero_actual
+                    diccionario_retorno = diccionario
 
-            elif (numero_mayor < numero_actual):
-                numero_mayor = numero_actual
-                diccionario_retorno = diccionario
-
-    return diccionario_retorno
+        retorno = diccionario_retorno
+    
+    return retorno 
 
 
 
@@ -359,27 +358,29 @@ def calcular_min_genero(lista_diccionarios:list[dict], clave_numerica:str, gener
 
     #si la lista recibida esta vacia, retorna False
     if lista_diccionarios == []:
-        return False
+        retorno = False
+    else:
+        bandera_primera = True
+        diccionario_retorno = {}
+        for diccionario in lista_diccionarios:
 
-    bandera_primera = True
-    diccionario_retorno = {}
-    for diccionario in lista_diccionarios:
+            #se verifica que diccionario['genero'] == genero_buscado y que diccionario[clave_numerica] represente a un numero real o entero
+            if diccionario['genero'] == genero_buscado and (verificar_numero_flotante(diccionario[clave_numerica]) or verificar_numero_entero(diccionario[clave_numerica])): 
 
-        #se verifica que diccionario['genero'] == genero_buscado y que diccionario[clave_numerica] represente a un numero real o entero
-        if diccionario['genero'] == genero_buscado and (verificar_numero_flotante(diccionario[clave_numerica]) or verificar_numero_entero(diccionario[clave_numerica])): 
+                
+                numero_actual = float(diccionario[clave_numerica]) # en caso de ser el nuevo mayor, se castea solo una vez
+                if (bandera_primera): #primera comparacion de valores numericos con una bandera
+                    bandera_primera = False
+                    numero_menor = numero_actual 
+                    diccionario_retorno = diccionario
 
-            
-            numero_actual = float(diccionario[clave_numerica]) # en caso de ser el nuevo mayor, se castea solo una vez
-            if (bandera_primera): #primera comparacion de valores numericos con una bandera
-                bandera_primera = False
-                numero_menor = numero_actual 
-                diccionario_retorno = diccionario
+                elif (numero_menor > numero_actual):
+                    numero_menor = numero_actual
+                    diccionario_retorno = diccionario
 
-            elif (numero_menor > numero_actual):
-                numero_menor = numero_actual
-                diccionario_retorno = diccionario
+        retorno = diccionario_retorno
 
-    return diccionario_retorno
+    return retorno 
 
 
 
@@ -389,6 +390,7 @@ def calcular_max_min_dato_genero(lista_diccionarios:list[dict], clave_numerica:s
     retorna: al heroe que cumpla los requisitos
     '''
     
+    retorno = True
     match tipo_calculo:
         case 'maximo':
             funcion = calcular_max_genero
@@ -396,11 +398,13 @@ def calcular_max_min_dato_genero(lista_diccionarios:list[dict], clave_numerica:s
             funcion = calcular_min_genero
         case _:
             print("calcular_max_min_genero: no se recibio un tipo_calculo valido")
-            return False
+            retorno = False
 
-    return funcion(lista_diccionarios, clave_numerica, genero_buscado)  
+    if retorno:
+        retorno = funcion(lista_diccionarios, clave_numerica, genero_buscado)  
 
-
+    return retorno 
+    
 
 
 def stark_calcular_imprimir_guardar_heroe_genero(lista_diccionarios:list[dict], clave_numerica:str, tipo_calculo:str, genero_buscado: str) -> bool:
@@ -414,7 +418,7 @@ def stark_calcular_imprimir_guardar_heroe_genero(lista_diccionarios:list[dict], 
     diccionario_local = calcular_max_min_dato_genero(lista_diccionarios,clave_numerica,tipo_calculo,genero_buscado) # se busca el diccionario
     # se arma cadena de salida 
 
-
+    retorno = True
     match tipo_calculo:
         case 'maximo':
             str_salida = f'Mayor {clave_numerica}: {obtener_nombre_y_dato(diccionario_local, clave_numerica)}'
@@ -422,12 +426,14 @@ def stark_calcular_imprimir_guardar_heroe_genero(lista_diccionarios:list[dict], 
             str_salida = f'Menor {clave_numerica}: {obtener_nombre_y_dato(diccionario_local, clave_numerica)}'
         case _:
             print("stark_calcular_imprimir_guardar_heroe_genero: no se recibio un tipo_calculo valido")
-            return False
+            retorno = False
     
-    imprimir_dato(str_salida)
+    if retorno:
+        imprimir_dato(str_salida)
+        nombre_archivo = "heroes_" + tipo_calculo + "_" + clave_numerica + "_" + genero_buscado + ".csv"
+        retorno = guardar_archivo(nombre_archivo, str_salida)
 
-    nombre_archivo = "heroes_" + tipo_calculo + "_" + clave_numerica + "_" + genero_buscado + ".csv"
-    return guardar_archivo(nombre_archivo, str_salida)
+    return retorno 
 
 
 
@@ -441,9 +447,6 @@ def stark_calcular_imprimir_guardar_heroe_genero(lista_diccionarios:list[dict], 
 ################################ parte 4 ################################
     
 
-
-
-
  
 
 
@@ -452,23 +455,22 @@ def sumar_dato_heroe_genero(lista_personajes:list[dict], clave_numerica:str, gen
     '''
     Recibe: una liste da diccionarios y una clave_numerica que debe estar presente en los diccionarios que a su vez deben ser del genero especificado
     Retorna: La suma de los valores. -1 en caso de error
-    '''
-
-
-    
+    '''    
     sumatoria = 0 #variable donde se guarda la sumatoria de datos
     
     # se itera y se valida
+    retorno = None
     for personaje in lista_personajes:
         if not(isinstance(personaje,dict)) or (personaje == {}):
-            return -1
-        
-        if personaje["genero"] == genero_buscado and verificar_numero_flotante(personaje[clave_numerica]):
+            retorno = -1
+            break
+        if diccionario_coincidencia(personaje, "genero", genero_buscado) and verificar_numero_flotante(personaje[clave_numerica]):
             sumatoria += float(personaje[clave_numerica]) #si el diccionario cumple los parametros, entonces se suma el dato buscado
 
-    return sumatoria
-
-
+    if retorno is None:
+        retorno = sumatoria
+    
+    return retorno 
 
 
 
@@ -481,13 +483,10 @@ def cantidad_heroes_genero(lista_diccionarios:list[dict], genero_buscado:str) ->
     '''
     contador = 0
     for diccionario in lista_diccionarios: # recorro la lista
-        if diccionario["genero"] == genero_buscado: # evaluo data
+        if diccionario_coincidencia(diccionario, "genero", genero_buscado): # evaluo data
             contador += 1 # cuento
 
     return contador # retorno
-
-
-
 
 
 
@@ -502,13 +501,15 @@ def calcular_promedio_genero(lista_personajes:list[dict], clave_numerica:str, ge
     sumatoria = sumar_dato_heroe_genero(lista_personajes, clave_numerica, genero_buscado)
     if sumatoria < 0:
         print("calcular_promedio_genero: error en diccionarios") 
-        return False
+        retorno = False
     elif sumatoria == 0: # se previene division por 0
-        return 0
+        retorno = 0
+    else:
+        # conteo y retorno
+        conteo = cantidad_heroes_genero(lista_personajes, genero_buscado)
+        retorno = dividir(sumatoria, conteo)
 
-    # conteo y retorno
-    conteo = cantidad_heroes_genero(lista_personajes, genero_buscado)
-    return dividir(sumatoria, conteo)
+    return retorno 
 
 
 
@@ -540,9 +541,6 @@ def stark_calcular_imprimir_guardar_promedio_altura_genero(lista_personajes:list
 
 
 
-
-
-
 ################################ parte 5 ################################
 
 
@@ -561,10 +559,32 @@ def calcular_cantidad_tipo(lista_diccionarios:list[dict],tipo_dato:str)->dict:
             "Error": "La lista se encuentra vacia"
         }
         
-        return diccionario
-            
-    diccionario = lista_diccionarios_contar_coincidencias(lista_diccionarios, tipo_dato)
-    return diccionario
+        retorno = diccionario
+    else:     
+        retorno = lista_diccionarios_contar_coincidencias(lista_diccionarios, tipo_dato)
+
+
+    return retorno 
+
+
+def calcular_cantidad_tipo_inclusivo(lista_diccionarios:list[dict],tipo_dato:str)->dict:
+    '''
+    verifica los elementos en lista_diccionarios para ver cuantos tipos de clave_lista hay y contar sus repeticiones.
+    Retorna: contenido default en caso de error o un diccionario de contadores con los distintos valores en la clave buscada y sus repeticiones.
+    '''
+    
+    if not valida_lista(lista_diccionarios):
+        diccionario =\
+        {
+            "Error": "La lista se encuentra vacia"
+        }
+        
+        retorno = diccionario
+    else:     
+        retorno = lista_diccionarios_contar_coincidencias_inclusivo(lista_diccionarios, tipo_dato)
+
+
+    return retorno 
 
 
 
@@ -578,10 +598,13 @@ def guardar_cantidad_heroes_tipo(diccionario_variedades_contadas:dict, tipo_dato
     cadena_diccionarios_archivo = ""
 
     for clave, valor in diccionario_variedades_contadas.items():
-        cadena_salida = f"caracterisitca: {tipo_dato} {clave} - cantidad de heroes: {valor}"
+        if clave == "No Data":
+            cadena_salida = f"caracterisitca: {tipo_dato} No Tiene - cantidad de heroes: {valor}"
+        else:
+            cadena_salida = f"caracterisitca: {tipo_dato} {clave} - cantidad de heroes: {valor}"
         
         if cadena_diccionarios_archivo:
-            cadena_diccionarios_archivo = cadena_diccionarios_archivo + '\n' + cadena_salida
+            cadena_diccionarios_archivo += ('\n' + cadena_salida)
         else:
             cadena_diccionarios_archivo = cadena_salida
 
@@ -604,6 +627,20 @@ def stark_calcular_cantidad_por_tipo(lista_heroes:list[dict], tipo_dato:str) -> 
     '''
 
     diccionario_cantidades = calcular_cantidad_tipo(lista_heroes, tipo_dato) # se hace el conteo
+    return guardar_cantidad_heroes_tipo(diccionario_cantidades, tipo_dato) # se guarda el archivo
+
+
+
+
+def stark_calcular_cantidad_por_tipo_inclusivo(lista_heroes:list[dict], tipo_dato:str) -> bool:
+    '''
+    itera la lista, verifica el contenido de la clave indicada. hace un conteo de las repeticiones y las guarda en un archivo
+    Recibe: una lista de diccionarios que representan cada uno a un heroe y el tipo de dato que se desea buscar
+    Retorna: True o False
+    
+    '''
+
+    diccionario_cantidades = calcular_cantidad_tipo_inclusivo(lista_heroes, tipo_dato) # se hace el conteo
     return guardar_cantidad_heroes_tipo(diccionario_cantidades, tipo_dato) # se guarda el archivo
 
 
@@ -644,9 +681,11 @@ def normalizar_dato(dato_heroe, valor_defecto:str):
     Retorna: el valor por defecto en caso de recibirse una cadena vacia o el dato del heroe sin modificar en caso de estar
     '''
     if not dato_heroe:
-        return valor_defecto
-    
-    return dato_heroe
+        retorno =  valor_defecto
+    else:
+        retorno =  dato_heroe
+
+    return retorno 
 
 
 
@@ -721,7 +760,8 @@ def guardar_heroes_por_tipo(diccionario_listas_coincidentes:dict[list[str]], cla
 
         # se muestra la lista de coincidencias formateadas
         cadena_salida = f'{clave_evaluada} {clave_lista_coincidentes}: {cadena_coincidencias_formateadas}'
-        print(cadena_salida)
+        if clave_lista_coincidentes != "N/a":
+            print(cadena_salida)
 
         # se formatea la cadena del archivo
         if cadena_archivo_formateada:
